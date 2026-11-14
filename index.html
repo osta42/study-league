@@ -64,6 +64,10 @@
 
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
+/* <dialog> fallback for older Safari (see script) */
+dialog:not([open]) { display: none; }
+.no-dialog dialog[open] { position: fixed; z-index: 100; left: 0; right: 0; top: 50%; transform: translateY(-50%); margin: 0 auto; display: block; overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.no-dialog body.poly-modal::before { content: ""; position: fixed; inset: 0; z-index: 99; background: rgba(4, 5, 6, .72); }
 html { -webkit-text-size-adjust: 100%; }
 body {
   margin: 0; font-family: var(--font); font-size: 15px; line-height: 1.45;
@@ -686,6 +690,7 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
 }
 .emoji-grid button:hover { transform: scale(1.08); border-color: var(--line-hi); }
 .emoji-grid button.selected { border-color: var(--lime); background: rgba(200, 255, 61, .14); }
+.photo-btn { color: var(--lime); border-color: rgba(200, 255, 61, .4); background: rgba(200, 255, 61, .08); }
 .player .avatar:enabled::after {
   content: "✎"; position: absolute; right: -6px; bottom: -6px; width: 20px; height: 20px; border-radius: 50%;
   display: grid; place-items: center; font-size: 11px; color: var(--ink); background: var(--lime); border: 2px solid #111316;
@@ -935,10 +940,21 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
 
     <div class="card card-anim feed-card">
       <div class="card-head">
-        <h2><span class="h-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>Live Feed</h2>
-        <span class="live-dot" aria-hidden="true"></span>
+        <h2><span class="h-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>Live <span class="live-dot" aria-hidden="true"></span></h2>
+        <div class="seg feed-tabs" id="feedTabs" role="tablist" aria-label="Live feed or chat">
+          <button type="button" data-tab="feed" class="active">Activity</button>
+          <button type="button" data-tab="chat">Chat<span class="badge-count" id="chatUnread" hidden></span></button>
+        </div>
       </div>
       <div class="feed" id="feed"><p class="feed-empty">Loading activity…</p></div>
+      <div class="chat" id="chatPane" hidden>
+        <div class="chat-list" id="chatList"><p class="feed-empty">No messages yet. Say hi 👋</p></div>
+        <form class="chat-form" id="chatForm" novalidate>
+          <input type="text" id="chatInput" maxlength="300" placeholder="Message the league…" autocomplete="off" aria-label="Chat message">
+          <button type="submit" class="primary-btn chat-send" aria-label="Send">➤</button>
+        </form>
+        <p class="hint" id="chatNote" hidden>Join the league (or log in with your PIN) to chat.</p>
+      </div>
     </div>
     </div>
   </section>
@@ -1098,6 +1114,31 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
   </div>
 </dialog>
 
+<dialog id="achModal" class="modal xl">
+  <div class="modal-inner">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">Achievements</p>
+        <h3 id="achTitle">Achievements</h3>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Close">✕</button>
+    </div>
+    <div id="achBody"></div>
+  </div>
+</dialog>
+
+<dialog id="unlockModal" class="modal unlock">
+  <div class="modal-inner">
+    <div class="unlock-rays" aria-hidden="true"></div>
+    <div class="unlock-medal" id="unlockMedal"></div>
+    <p class="unlock-kicker" id="unlockKicker">Achievement unlocked</p>
+    <h3 id="unlockName"></h3>
+    <p id="unlockDesc"></p>
+    <span class="tier-pill" id="unlockTier"></span>
+    <div class="form-actions" style="justify-content:center"><button type="button" class="primary-btn" data-close>Let's go!</button></div>
+  </div>
+</dialog>
+
 <button class="fab" id="fab" type="button" hidden aria-label="Clock in">
   <span class="fab-dot" aria-hidden="true"></span><span id="fabText">Clock in</span>
 </button>
@@ -1132,9 +1173,28 @@ const firebaseConfig = {
  * "Online" = page open recently (lastSeen heartbeat). "Studying" = clockedInAt is set. */
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { getFirestore, collection, doc, onSnapshot, getDoc, setDoc, updateDoc, deleteDoc, writeBatch } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getFirestore, collection, doc, onSnapshot, getDoc, setDoc, updateDoc, deleteDoc, writeBatch, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
-const FB = { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, collection, doc, onSnapshot, getDoc, setDoc, updateDoc, deleteDoc, writeBatch };
+/* Pop-up fallback for older iPad/iPhone Safari (before iPadOS 15.4) that lacks <dialog>.showModal. */
+if (typeof HTMLDialogElement !== 'function' || !HTMLDialogElement.prototype.showModal) {
+  document.documentElement.classList.add('no-dialog');
+  document.querySelectorAll('dialog').forEach(d => {
+    Object.defineProperty(d, 'open', { configurable: true, get() { return this.hasAttribute('open'); } });
+    d.showModal = function () { this.setAttribute('open', ''); document.body.classList.add('poly-modal'); };
+    d.close = function () {
+      this.removeAttribute('open');
+      if (!document.querySelector('dialog[open]')) document.body.classList.remove('poly-modal');
+    };
+  });
+  document.addEventListener('click', e => {
+    if (e.target === document.body && document.body.classList.contains('poly-modal')) {
+      const open = [...document.querySelectorAll('dialog[open]')].pop();
+      if (open) open.close();
+    }
+  });
+}
+
+const FB = { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, collection, doc, onSnapshot, getDoc, setDoc, updateDoc, deleteDoc, writeBatch, query, orderBy, limit };
 const ONLINE_WINDOW_MS = 150000;   // seen in the last 2.5 minutes = online
 const HEARTBEAT_MS = 60000;
 
@@ -1545,7 +1605,9 @@ const HEARTBEAT_MS = 60000;
       medEl.hidden = !sum;
       if (sum) { const mh = medalsHTML(p.uid); if (medEl._h !== mh) { medEl.innerHTML = mh; medEl._h = mh; } }
       el.querySelector('.chips').innerHTML = p.empty ? '<span class="hint">Waiting for a player to join</span>'
-        : statusChip(p) + extras + (!S.me && S.authUid ? `<button type="button" class="chip-btn claim-btn" data-claim="${p.uid}">That's me</button>` : '');
+        : statusChip(p) + extras
+          + (isMe ? '<button type="button" class="chip-btn claim-btn photo-btn" data-photo-btn>📷 Change photo</button>' : '')
+          + (!S.me && S.authUid ? `<button type="button" class="chip-btn claim-btn" data-claim="${p.uid}">That's me</button>` : '');
       el.querySelector('.profile-grid').hidden = p.empty;
       const bEl = el.querySelector('.badges');
       bEl.hidden = !sum;
@@ -1743,8 +1805,11 @@ const HEARTBEAT_MS = 60000;
   const pinModal = $('#pinModal');
   let pinFor = null;
   $('#players').addEventListener('click', e => {
-    const more = e.target.closest('[data-badges]');
-    if (more) { more.parentElement.classList.toggle('show-all'); return; }
+    if (e.target.closest('[data-photo-btn]')) { openAvatarPicker(); return; }
+    const tog = e.target.closest('[data-badges]');
+    if (tog) { tog.parentElement.classList.toggle('show-all'); return; }
+    const more = e.target.closest('[data-ach]');
+    if (more && typeof openAch === 'function') { openAch(Number(more.dataset.ach)); return; }
     const b = e.target.closest('[data-claim]');
     if (!b) return;
     const p = byUid(b.dataset.claim);
