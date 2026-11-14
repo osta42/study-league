@@ -31,7 +31,12 @@ service cloud.firestore {
     function validSession(d) {
       return d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && d.hours is number && d.hours > 0 && d.hours <= 24
-        && (!('subject' in d) || (d.subject is string && d.subject.size() <= 40));
+        && (!('subject' in d) || (d.subject is string && d.subject.size() <= 40))
+        && (!('bonus' in d) || (d.bonus is int && d.bonus >= 0 && d.bonus <= 520));
+    }
+
+    function validReaction(d) {
+      return d.emoji in ['🔥', '👏', '💀'] && d.target is string && d.sid is string;
     }
 
     // PIN for each spot. Write-once while the spot is still free; never readable.
@@ -64,6 +69,13 @@ service cloud.firestore {
       match /sessions/{sessionId} {
         allow read: if signedIn();
         allow create, update: if linked(pid) && validSession(request.resource.data);
+        allow delete: if linked(pid);
+      }
+
+      // Reactions this player gave to other players' sessions.
+      match /reactions/{reactionId} {
+        allow read: if signedIn();
+        allow create, update: if linked(pid) && validReaction(request.resource.data);
         allow delete: if linked(pid);
       }
     }
