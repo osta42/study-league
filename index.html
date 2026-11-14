@@ -377,6 +377,8 @@ h1 {
 .join b { font-family: var(--display); font-weight: 600; font-size: 1.02rem; }
 .join-fields { display: grid; grid-template-columns: minmax(0, 1fr) 110px; gap: 10px; }
 .pin-input { font-family: var(--display); font-size: 1.15rem !important; font-weight: 600; letter-spacing: .5em; text-align: center; font-variant-numeric: tabular-nums; }
+.code-input { font-family: var(--display); font-weight: 700; letter-spacing: .25em; text-transform: uppercase; }
+.code-input::placeholder { letter-spacing: 0; text-transform: none; font-weight: 400; font-family: var(--font); }
 .pin-error { color: #ffb3c1; font-size: .84rem; margin-top: 8px; }
 .claim-btn { padding: 4px 10px; font-size: .72rem; }
 .slot-picks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -558,8 +560,17 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
 .pod { --c: #8a8e86; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; animation: podIn .65s var(--spring) both; }
 .pod.p1 { animation-delay: .08s; }
 .pod.p3 { animation-delay: .14s; }
-.pod .avatar { width: 48px; height: 48px; font-size: 24px; border-radius: 15px; }
-.pod.p1 .avatar { width: 62px; height: 62px; font-size: 31px; border-radius: 19px; box-shadow: 0 0 0 3px rgba(10, 11, 13, .6), 0 0 34px -6px rgba(230, 192, 107, .6); }
+.pod-top {
+  position: relative; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 14px 8px 12px;
+  border-radius: 18px 18px 0 0; overflow: hidden; isolation: isolate; min-width: 0;
+}
+.pod-top > .banner { position: absolute; inset: 0; z-index: -1; opacity: .75;
+  -webkit-mask: linear-gradient(180deg, #000 30%, transparent); mask: linear-gradient(180deg, #000 30%, transparent); }
+.pod .avatar { width: 96px; height: 96px; font-size: 46px; border-radius: 26px; }
+.pod.p1 .avatar { width: 128px; height: 128px; font-size: 62px; border-radius: 34px; box-shadow: 0 0 0 4px rgba(10, 11, 13, .7), 0 0 44px -6px rgba(230, 192, 107, .7); }
+.pod.p2 .avatar { box-shadow: 0 0 0 4px rgba(10, 11, 13, .7), 0 0 30px -8px rgba(195, 203, 217, .6); }
+.pod.p3 .avatar { box-shadow: 0 0 0 4px rgba(10, 11, 13, .7), 0 0 30px -8px rgba(211, 148, 103, .6); }
+.pod-name { text-shadow: 0 1px 8px rgba(0, 0, 0, .7); }
 .pod-name { font-family: var(--display); font-weight: 600; font-size: .88rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .pod-pts { font-size: .74rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
 .pod.p1 .pod-pts { color: #f1d796; }
@@ -877,6 +888,47 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
 .chat-send { padding: 0 16px; font-size: 1rem; }
 @media (hover: none) { .msg-del { opacity: .55; } }
 
+/* ===== Ranks (finish every achievement of a tier) ===== */
+.r-bronze { --rc: #d39467; } .r-silver { --rc: #d4dbe6; } .r-gold { --rc: #f0c75e; } .r-platinum { --rc: #9ff0ff; } .r-secret { --rc: #c8ff3d; }
+.player[data-rank=bronze], .you-card[data-rank=bronze] { --rc: #d39467; }
+.player[data-rank=silver], .you-card[data-rank=silver] { --rc: #d4dbe6; }
+.player[data-rank=gold], .you-card[data-rank=gold] { --rc: #f0c75e; }
+.player[data-rank=platinum], .you-card[data-rank=platinum] { --rc: #9ff0ff; }
+.player[data-rank=secret], .you-card[data-rank=secret] { --rc: #c8ff3d; }
+.rank-chip {
+  display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 99px; white-space: nowrap; vertical-align: middle;
+  font-size: .66rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase;
+  border: 1px solid var(--rc); color: var(--rc); background: color-mix(in srgb, var(--rc) 12%, transparent);
+}
+.rank-chip.r-platinum { box-shadow: 0 0 12px -3px var(--rc); }
+.rank-chip.r-secret { color: #fff; border-color: transparent; background: linear-gradient(90deg, rgba(255, 92, 138, .45), rgba(200, 255, 61, .4), rgba(76, 194, 255, .45)); background-size: 200% 100%; animation: holo 4s ease infinite; }
+.rank-emblem { margin-left: 6px; font-size: .9rem; filter: drop-shadow(0 0 6px var(--rc)); }
+.you-eyebrow .rank-chip { margin-left: 8px; font-size: .58rem; padding: 2px 7px; }
+.rank-next { margin-top: 6px; font-size: .8rem; color: var(--text-2); }
+.ach-total .rank-chip { margin-left: 8px; }
+
+.player[data-rank], .you-card[data-rank] {
+  border: 2px solid var(--rc);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc) 25%, transparent), 0 0 30px -10px var(--rc);
+}
+.player[data-rank=gold], .you-card[data-rank=gold],
+.player[data-rank=platinum], .you-card[data-rank=platinum] { animation: rankGlow 3s ease-in-out infinite; }
+@keyframes rankGlow { 50% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--rc) 45%, transparent), 0 0 44px -6px var(--rc); } }
+.player[data-rank=platinum]::after, .you-card[data-rank=platinum]::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(115deg, transparent 40%, rgba(159, 240, 255, .16) 50%, transparent 60%); background-size: 260% 100%;
+  animation: sheen2 4.5s ease-in-out infinite;
+}
+.player[data-rank=secret], .you-card[data-rank=secret] { border-color: transparent; box-shadow: 0 0 40px -10px rgba(200, 255, 61, .7), 0 0 60px -20px rgba(167, 139, 250, .8); }
+.player[data-rank=secret]::after, .you-card[data-rank=secret]::after {
+  content: ""; position: absolute; inset: -2px; border-radius: inherit; padding: 2px; pointer-events: none;
+  background: conic-gradient(from var(--ang), #ff5c8a, #ffb13d, #c8ff3d, #3ee0b5, #4cc2ff, #a78bfa, #ff5c8a);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: spin 4s linear infinite;
+}
+.unlock.rank-up-pop .unlock-medal { border-radius: 28px; }
+
 /* Floating clock button (phones only) */
 .fab { display: none; }
 
@@ -926,8 +978,10 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
   .dots { display: flex; }
   .modal-inner { padding: 20px; }
   .burst { font-size: 2rem; }
-  .pod .avatar { width: 40px; height: 40px; font-size: 20px; }
-  .pod.p1 .avatar { width: 50px; height: 50px; font-size: 25px; }
+  .podium { gap: 6px; }
+  .pod-top { padding: 10px 4px 10px; }
+  .pod .avatar { width: 72px; height: 72px; font-size: 34px; border-radius: 20px; }
+  .pod.p1 .avatar { width: 94px; height: 94px; font-size: 46px; border-radius: 26px; }
   .pod.p1 .pod-block { height: 58px; }
   .pod.p2 .pod-block { height: 42px; }
   .pod.p3 .pod-block { height: 30px; }
@@ -965,6 +1019,80 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
+/* ===== Profile banners ===== */
+.banner { background-color: #16181c; background-size: cover; background-position: center; }
+.banner:not([data-b]):not(.img) { background: radial-gradient(120% 140% at 0% 0%, var(--cs2), transparent 60%), linear-gradient(120deg, var(--cs), #121417 70%); }
+.banner[data-b=lime] { background: radial-gradient(90% 160% at 85% 10%, rgba(200, 255, 61, .55), transparent 55%), radial-gradient(70% 120% at 10% 100%, rgba(200, 255, 61, .18), transparent 60%), #101210; }
+.banner[data-b=aurora] { background: radial-gradient(60% 140% at 15% 0%, rgba(61, 255, 180, .6), transparent 60%), radial-gradient(60% 140% at 60% 100%, rgba(120, 90, 255, .6), transparent 60%), radial-gradient(50% 120% at 95% 20%, rgba(61, 200, 255, .45), transparent 60%), #0a0d16; }
+.banner[data-b=sunset] { background: linear-gradient(115deg, #ff8a3d 0%, #ff4f7b 45%, #7b3dff 100%); }
+.banner[data-b=ocean] { background: radial-gradient(80% 140% at 80% 0%, rgba(61, 200, 255, .55), transparent 60%), linear-gradient(160deg, #0b3a6b, #061527 70%); }
+.banner[data-b=ember] { background: radial-gradient(70% 150% at 50% 120%, #ff6a2b, transparent 65%), radial-gradient(40% 90% at 15% 110%, #ffb03b, transparent 70%), #170806; }
+.banner[data-b=grape] { background: linear-gradient(135deg, #2a0f4d, #6d2bd9 55%, #c55bff); }
+.banner[data-b=mint] { background: linear-gradient(120deg, #0f3d35, #1fbf8f 60%, #b8ffd9); }
+.banner[data-b=gold] { background: radial-gradient(90% 160% at 20% 0%, #ffe9a8, transparent 50%), linear-gradient(120deg, #8a5a12, #e6c06b 50%, #6b440c); }
+.banner[data-b=candy] { background: linear-gradient(120deg, #ff7ac8, #ffb3e1 35%, #7ad8ff 70%, #8a7aff); }
+.banner[data-b=grid] { background:
+  repeating-linear-gradient(0deg, rgba(200, 255, 61, .22) 0 1px, transparent 1px 18px),
+  repeating-linear-gradient(90deg, rgba(200, 255, 61, .22) 0 1px, transparent 1px 18px),
+  radial-gradient(80% 120% at 50% 0%, rgba(200, 255, 61, .25), transparent 70%), #0b0c0e; }
+.banner[data-b=stripes] { background: repeating-linear-gradient(135deg, var(--cs2) 0 14px, transparent 14px 28px), linear-gradient(120deg, var(--cs), #121417); }
+.banner[data-b=dots] { background: radial-gradient(circle, rgba(255, 255, 255, .28) 1.4px, transparent 1.8px) 0 0 / 14px 14px, linear-gradient(120deg, var(--cs2), #121417 80%); }
+.banner[data-b=night] { background:
+  radial-gradient(1.5px 1.5px at 12% 30%, #fff, transparent), radial-gradient(1px 1px at 30% 70%, #fff, transparent),
+  radial-gradient(1.5px 1.5px at 52% 22%, #fff, transparent), radial-gradient(1px 1px at 70% 60%, #fff, transparent),
+  radial-gradient(1.5px 1.5px at 88% 35%, #fff, transparent), radial-gradient(1px 1px at 42% 88%, #fff, transparent),
+  radial-gradient(70% 140% at 80% 120%, rgba(120, 90, 255, .55), transparent 60%), linear-gradient(180deg, #050816, #121a3a); }
+.banner[data-b=mono] { background: linear-gradient(120deg, #2a2d33, #4a4e57 40%, #1b1d21 70%, #33363c); }
+.banner[data-b=fire] { background: conic-gradient(from 200deg at 50% 120%, #ff2d55, #ff8a3d, #ffd23d, #ff8a3d, #ff2d55); }
+.banner.img { background-size: cover; background-position: center; }
+
+/* Banner on player cards (Discord-style strip with the photo overlapping) */
+.player > .p-banner { position: absolute; left: 0; right: 0; top: 0; height: 92px; z-index: 0;
+  -webkit-mask: linear-gradient(180deg, #000 55%, transparent); mask: linear-gradient(180deg, #000 55%, transparent); }
+.player > *:not(.p-banner) { position: relative; z-index: 1; }
+.player-top { padding-top: 40px; align-items: flex-end; }
+.player .name-text { text-shadow: 0 1px 8px rgba(0, 0, 0, .6); }
+.player .avatar { width: 64px; height: 64px; border-radius: 19px; font-size: 32px; box-shadow: 0 0 0 4px #121417, 0 8px 18px -10px var(--cg); }
+.player .pname { padding-bottom: 2px; }
+
+/* Banner behind the You card */
+.you-card { overflow: hidden; isolation: isolate; }
+.you-card > .you-banner { position: absolute; inset: 0; z-index: -1; opacity: .6; }
+.you-card > .you-banner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(14, 15, 18, .35), rgba(14, 15, 18, .88) 55%, rgba(14, 15, 18, .95)); }
+
+/* Banner in the achievements/profile pop-up header */
+.ach-head { position: relative; overflow: hidden; isolation: isolate; }
+.ach-head > .banner { position: absolute; inset: 0; z-index: -1; opacity: .55; }
+.ach-head > .banner::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(14, 15, 18, .2), rgba(14, 15, 18, .9) 60%); }
+
+/* Banner picker */
+.look-section + .look-section { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.look-section > h4 { font-family: var(--display); font-size: .95rem; margin: 0 0 10px; }
+.banner-preview { position: relative; height: 92px; border-radius: 14px; border: 1px solid var(--line); overflow: hidden; margin-bottom: 10px; }
+.banner-preview .avatar { position: absolute; left: 14px; bottom: 10px; width: 54px; height: 54px; font-size: 26px; border-radius: 16px; }
+.banner-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-bottom: 10px; }
+.banner-grid button { height: 40px; border-radius: 10px; border: 2px solid transparent; outline: 1px solid var(--line); transition: transform .2s var(--spring), border-color .2s; }
+.banner-grid button:hover { transform: translateY(-2px); }
+.banner-grid button.selected { border-color: var(--lime); outline-color: transparent; }
+.banner-actions { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+/* Cropper */
+.crop-stage { position: relative; width: 100%; border-radius: 14px; overflow: hidden; background: #050506; touch-action: none; cursor: grab; user-select: none; -webkit-user-select: none; }
+.crop-stage:active { cursor: grabbing; }
+.crop-stage canvas { display: block; width: 100%; height: 100%; }
+.crop-frame { position: absolute; pointer-events: none; box-shadow: 0 0 0 9999px rgba(0, 0, 0, .6); border: 2px solid rgba(255, 255, 255, .9); }
+.crop-frame::before, .crop-frame::after { content: ""; position: absolute; inset: 0; pointer-events: none; }
+.crop-frame::before { border-left: 1px solid rgba(255, 255, 255, .25); border-right: 1px solid rgba(255, 255, 255, .25); left: 33.33%; right: 33.33%; }
+.crop-frame::after { border-top: 1px solid rgba(255, 255, 255, .25); border-bottom: 1px solid rgba(255, 255, 255, .25); top: 33.33%; bottom: 33.33%; }
+.crop-zoom { display: flex; align-items: center; gap: 10px; margin: 14px 0 4px; color: var(--muted); }
+.crop-zoom input { flex: 1; accent-color: var(--lime); }
+.crop-btns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+@media (max-width: 640px) {
+  .banner-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .player .avatar { width: 56px; height: 56px; border-radius: 17px; font-size: 28px; }
+  .player-top { padding-top: 34px; }
+  .player > .p-banner { height: 80px; }
 }
 </style>
 </head>
@@ -1052,6 +1180,10 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
           <p class="hint">Pick a free spot, your name and a 4-digit PIN. Use the PIN to get back into your profile on another phone or computer.</p>
         </div>
         <div class="slot-picks" id="slotPicks"></div>
+        <div>
+          <label class="field-label" for="joinCode" style="margin-top:0">League code</label>
+          <input type="text" id="joinCode" maxlength="16" placeholder="Ask the league owner for the code" autocomplete="off" autocapitalize="characters" spellcheck="false" class="code-input">
+        </div>
         <div class="join-fields">
           <div>
             <label class="field-label" for="joinName" style="margin-top:0">Your name</label>
@@ -1225,22 +1357,55 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
     <div class="modal-head">
       <div>
         <p class="eyebrow">Your profile</p>
-        <h3>Profile picture</h3>
+        <h3>Customize your look</h3>
       </div>
       <button class="icon-btn" type="button" data-close aria-label="Close">✕</button>
     </div>
-    <div class="av-pick-top">
-      <span class="avatar xl" id="avPreview"></span>
-      <div class="av-pick-actions">
-        <label class="primary-btn upload-btn">📷 Upload photo
-          <input type="file" id="photoInput" accept="image/*" class="file-input">
-        </label>
-        <button type="button" class="ghost-btn danger" id="removePhoto" hidden>Remove photo</button>
-        <p class="hint" id="photoStatus">Square crop, shrunk automatically.</p>
+    <section class="look-section">
+      <h4>Profile picture</h4>
+      <div class="av-pick-top">
+        <span class="avatar xl" id="avPreview"></span>
+        <div class="av-pick-actions">
+          <label class="primary-btn upload-btn">📷 Upload photo
+            <input type="file" id="photoInput" accept="image/*" class="file-input">
+          </label>
+          <button type="button" class="ghost-btn danger" id="removePhoto" hidden>Remove photo</button>
+          <p class="hint" id="photoStatus">You can drag and zoom to crop it.</p>
+        </div>
       </div>
+      <span class="field-label">Or pick an emoji <em>(replaces your photo)</em></span>
+      <div class="emoji-grid" id="emojiGrid"></div>
+    </section>
+    <section class="look-section">
+      <h4>Banner</h4>
+      <div class="banner banner-preview" id="bannerPreview"></div>
+      <div class="banner-grid" id="bannerGrid"></div>
+      <div class="banner-actions">
+        <label class="ghost-btn upload-btn">🖼 Use my own image
+          <input type="file" id="bannerInput" accept="image/*" class="file-input">
+        </label>
+        <button type="button" class="ghost-btn danger" id="removeBanner" hidden>Remove my image</button>
+        <span class="hint" id="bannerStatus"></span>
+      </div>
+    </section>
+  </div>
+</dialog>
+
+<dialog id="cropModal" class="modal">
+  <div class="modal-inner">
+    <div class="modal-head">
+      <div>
+        <p class="eyebrow">Drag to move · pinch or slide to zoom</p>
+        <h3 id="cropTitle">Crop photo</h3>
+      </div>
+      <button class="icon-btn" type="button" data-crop-cancel aria-label="Cancel">✕</button>
     </div>
-    <span class="field-label">Or pick an emoji <em>(replaces your photo)</em></span>
-    <div class="emoji-grid" id="emojiGrid"></div>
+    <div class="crop-stage" id="cropStage"><canvas id="cropCanvas"></canvas><div class="crop-frame" id="cropFrame"></div></div>
+    <label class="crop-zoom"><span aria-hidden="true">−</span><input type="range" id="cropZoom" min="1" max="5" step="0.01" value="1" aria-label="Zoom"><span aria-hidden="true">＋</span></label>
+    <div class="crop-btns">
+      <button type="button" class="ghost-btn" data-crop-cancel>Cancel</button>
+      <button type="button" class="primary-btn" id="cropSave">Save</button>
+    </div>
   </div>
 </dialog>
 
@@ -1303,7 +1468,7 @@ const firebaseConfig = {
  * "Online" = page open recently (lastSeen heartbeat). "Studying" = clockedInAt is set. */
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
 import { getAuth, signInAnonymously, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-import { getFirestore, collection, doc, onSnapshot, getDoc, setDoc, updateDoc, deleteDoc, writeBatch, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
+import { getFirestore, collection, doc, onSnapshot, getDoc, getDocs, setDoc, updateDoc, deleteDoc, writeBatch, query, orderBy, limit } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 
 /* Pop-up fallback for older iPad/iPhone Safari (before iPadOS 15.4) that lacks <dialog>.showModal. */
 if (typeof HTMLDialogElement !== 'function' || !HTMLDialogElement.prototype.showModal) {
@@ -1324,8 +1489,8 @@ if (typeof HTMLDialogElement !== 'function' || !HTMLDialogElement.prototype.show
   });
 }
 
-const FB = { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, collection, doc, onSnapshot, getDoc, setDoc, updateDoc, deleteDoc, writeBatch, query, orderBy, limit };
-const APP_VERSION = '1.8 (achievements + chat)';   // shown at the bottom of the page; bump on each update
+const FB = { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, collection, doc, onSnapshot, getDoc, getDocs, setDoc, updateDoc, deleteDoc, writeBatch, query, orderBy, limit };
+const APP_VERSION = '2.0 (banners)';   // shown at the bottom of the page; bump on each update
 const ONLINE_WINDOW_MS = 150000;   // seen in the last 2.5 minutes = online
 const HEARTBEAT_MS = 60000;
 
@@ -1447,6 +1612,7 @@ const HEARTBEAT_MS = 60000;
     members: {},         // uid -> member doc
     reactions: {},       // uid -> { "<target>__<session>": { emoji, target, sid, at } }
     photos: {},          // spot -> { data, at }
+    banners: {},         // spot -> { data, at } (custom banner images)
     achs: {},            // spot -> { achievementId: { at, seeded } }
     achLoaded: {},       // spot -> true once its achievements have loaded
     sessions: {},        // uid -> { sid -> session }
@@ -1486,7 +1652,9 @@ const HEARTBEAT_MS = 60000;
         color: COLORS[slot],
         clockedInAt: typeof h.m.clockedInAt === 'number' && h.m.clockedInAt > 0 ? h.m.clockedInAt : null,
         lastSeen: Number(h.m.lastSeen) || 0,
-        photo: validPhoto(S.photos[h.uid] && S.photos[h.uid].data)
+        photo: validPhoto(S.photos[h.uid] && S.photos[h.uid].data),
+        banner: BANNER_IDS.includes(h.m.banner) ? h.m.banner : null,
+        bannerImg: validBanner(S.banners[h.uid] && S.banners[h.uid].data)
       };
     });
   }
@@ -1495,6 +1663,23 @@ const HEARTBEAT_MS = 60000;
   const validPhoto = d => (typeof d === 'string' && d.length < 200000 && PHOTO_RE.test(d)) ? d : null;
   const avHTML = p => p.photo ? `<img src="${p.photo}" alt="" decoding="async">` : esc(p.avatar);
   const avInline = p => p.photo ? `<img class="av-inline" src="${p.photo}" alt="">` : esc(p.avatar);
+  /* Profile banners: a preset (profile.banner) or a custom image in banners/<spot> (the image wins). */
+  const BANNERS = [['lime', 'Lime glow'], ['aurora', 'Aurora'], ['sunset', 'Sunset'], ['ocean', 'Ocean'], ['ember', 'Ember'],
+    ['grape', 'Grape'], ['mint', 'Mint'], ['gold', 'Gold'], ['candy', 'Candy'], ['grid', 'Grid'], ['stripes', 'Stripes'],
+    ['dots', 'Dots'], ['night', 'Night sky'], ['mono', 'Graphite']];
+  const BANNER_IDS = BANNERS.map(b => b[0]);
+  const validBanner = d => (typeof d === 'string' && d.length < 400000 && PHOTO_RE.test(d)) ? d : null;
+  const bannerHTML = (p, cls) => p.bannerImg
+    ? `<div class="banner img ${cls}" style="background-image:url('${p.bannerImg}')" aria-hidden="true"></div>`
+    : `<div class="banner ${cls}"${p.banner ? ` data-b="${p.banner}"` : ''} aria-hidden="true"></div>`;
+  function applyBanner(el, p) {
+    const key = (p.bannerImg || '') + '|' + (p.banner || '');
+    if (el._b === key) return;
+    el._b = key;
+    el.classList.toggle('img', !!p.bannerImg);
+    el.style.backgroundImage = p.bannerImg ? `url('${p.bannerImg}')` : '';
+    if (!p.bannerImg && p.banner) el.dataset.b = p.banner; else delete el.dataset.b;
+  }
   const mine = () => (S.me ? PS.find(p => p.uid === S.me) : null) || null;
   const byUid = uid => PS.find(p => p.uid === uid);
   function entries() {
@@ -1642,6 +1827,8 @@ const HEARTBEAT_MS = 60000;
       row.querySelector('.avatar').classList.toggle('ringing', st === 'studying');
       const nm = row.querySelector('.lb-name');
       nm.textContent = x.p.name + (x.p.uid && x.p.uid === S.me ? ' (you)' : '');
+      const lbRank = x.p.empty ? null : rankOf(SUM[x.p.uid]);
+      if (lbRank) nm.insertAdjacentHTML('beforeend', `<span class="rank-emblem r-${lbRank}" title="${RANKS[lbRank].name} rank">${RANKS[lbRank].ico}</span>`);
       if (x.rank === 1 && x.points > 0 && !x.p.empty) nm.insertAdjacentHTML('beforeend', '<span class="crown">👑</span>');
       row.querySelector('.bar-fill').style.width = (max > 0 ? Math.max(x.hours / max * 100, x.hours > 0 ? 4 : 0) : 0) + '%';
       animateNum(row.querySelector('.v'), x.points, fmtPts);
@@ -1670,6 +1857,7 @@ const HEARTBEAT_MS = 60000;
       el.className = 'player';
       colorVars(el, COLORS[slot]);
       el.innerHTML = `
+        <div class="banner p-banner" aria-hidden="true"></div>
         <div class="player-top">
           <button class="avatar" type="button" aria-label="Change your avatar"></button>
           <div class="pname">
@@ -1712,6 +1900,8 @@ const HEARTBEAT_MS = 60000;
     PS.forEach((p, i) => {
       const el = cards[p.slot], isMe = !!p.uid && p.uid === S.me;
       el.classList.toggle('mine', isMe);
+      const rank = p.empty ? null : rankOf(SUM[p.uid]);
+      if ((el.dataset.rank || '') !== (rank || '')) { if (rank) el.dataset.rank = rank; else delete el.dataset.rank; }
       el.classList.toggle('empty', p.empty);
       el.hidden = p.empty;
       const av = el.querySelector('.avatar');
@@ -1726,7 +1916,8 @@ const HEARTBEAT_MS = 60000;
       inp.hidden = !isMe;
       if (isMe && document.activeElement !== inp && !nameTimer) inp.value = p.name;
       av.classList.toggle('ringing', !p.empty && !!p.clockedInAt);
-      av.style.setProperty('--r', '15px');
+      av.style.setProperty('--r', '19px');
+      applyBanner(el.querySelector('.p-banner'), p);
       const sum = p.empty ? null : SUM[p.uid];
       let extras = '';
       if (sum) {
@@ -1738,7 +1929,7 @@ const HEARTBEAT_MS = 60000;
       medEl.hidden = !sum;
       if (sum) { const mh = medalsHTML(p.uid); if (medEl._h !== mh) { medEl.innerHTML = mh; medEl._h = mh; } }
       el.querySelector('.chips').innerHTML = p.empty ? '<span class="hint">Waiting for a player to join</span>'
-        : statusChip(p) + extras
+        : rankChip(rank) + statusChip(p) + extras
           + (isMe ? '<button type="button" class="chip-btn claim-btn photo-btn" data-photo-btn>📷 Change photo</button>' : '')
           + (!S.me && S.authUid ? `<button type="button" class="chip-btn claim-btn" data-claim="${p.uid}">That's me</button>` : '');
       el.querySelector('.profile-grid').hidden = p.empty;
@@ -1914,6 +2105,8 @@ const HEARTBEAT_MS = 60000;
   $('#joinBtn').addEventListener('click', async () => {
     const name = $('#joinName').value.trim().slice(0, 20);
     const pin = $('#joinPin').value;
+    const code = $('#joinCode').value.trim().toUpperCase().replace(/\s+/g, '');
+    if (!code) { shakeEl($('#joinCode')); toast('Enter the league code. Ask the league owner for it.'); return; }
     if (!name) { shakeEl($('#joinName')); return; }
     if (!/^\d{4}$/.test(pin)) { shakeEl($('#joinPin')); toast('Choose a 4-digit PIN.'); return; }
     if (!joinSlot || !S.db || !S.authUid) return;
@@ -1922,7 +2115,7 @@ const HEARTBEAT_MS = 60000;
     btn.disabled = true;
     try {
       const b = FB.writeBatch(S.db);
-      b.set(FB.doc(S.db, 'secrets', pid), { pin });
+      b.set(FB.doc(S.db, 'secrets', pid), { pin, code });
       b.set(FB.doc(S.db, 'profiles', pid, 'devices', S.authUid), { pin, linkedAt: Date.now() });
       b.set(FB.doc(S.db, 'profiles', pid), { slot: joinSlot, name, avatar: DEFAULT_AV[joinSlot], joinedAt: Date.now(), clockedInAt: null, lastSeen: Date.now() });
       await b.commit();
@@ -1930,7 +2123,7 @@ const HEARTBEAT_MS = 60000;
       $('#joinName').value = ''; $('#joinPin').value = '';
       toast(`Welcome to the league, ${name}! Remember your PIN: you'll need it on other devices.`);
     } catch (e) {
-      if (e && e.code === 'permission-denied') toast('That spot was just taken. Pick another one.');
+      if (e && e.code === 'permission-denied') { shakeEl($('#joinCode')); toast('Couldn\'t join: the league code is wrong (or that spot was just taken).'); }
       else writeErr(e);
     }
     btn.disabled = false;
@@ -2312,6 +2505,26 @@ const HEARTBEAT_MS = 60000;
   const achDone = (a, s) => { const [c, t] = a.prog(s); return c >= t; };
   const achOf = s => s ? ACH.filter(a => achDone(a, s)) : [];
 
+  /* --- Ranks: finish every achievement in a tier to earn that rank (highest one counts) --- */
+  const RANKS = {
+    bronze: { name: 'Bronze', ico: '🥉' }, silver: { name: 'Silver', ico: '🥈' }, gold: { name: 'Gold', ico: '🥇' },
+    platinum: { name: 'Platinum', ico: '💎' }, secret: { name: 'Mythic', ico: '🌌' }
+  };
+  const RANK_ORDER = ['bronze', 'silver', 'gold', 'platinum', 'secret'];
+  const tierDone = (t, has) => ACH.filter(a => a.tier === t).every(has);
+  function rankFrom(has) { let r = null; RANK_ORDER.forEach(t => { if (tierDone(t, has)) r = t; }); return r; }
+  const rankOf = s => s ? rankFrom(a => achDone(a, s)) : null;
+  function rankNextText(s) {
+    const cur = rankOf(s), from = cur ? RANK_ORDER.indexOf(cur) + 1 : 0;
+    const next = RANK_ORDER.slice(from).find(t => t !== 'secret') || (cur !== 'secret' ? 'secret' : null);
+    if (!next) return 'Highest rank reached. Legendary.';
+    const items = ACH.filter(a => a.tier === next), left = items.filter(a => !achDone(a, s)).length;
+    return next === 'secret'
+      ? `Find all ${items.length} secret achievements to reach ${RANKS.secret.ico} Mythic rank (${left} to go).`
+      : `Next: ${RANKS[next].ico} ${RANKS[next].name} rank · finish every ${TIERS[next].label} achievement (${left} left).`;
+  }
+  const rankChip = t => t ? `<span class="rank-chip r-${t}" title="${RANKS[t].name} rank: completed every ${TIERS[t].label} achievement">${RANKS[t].ico} ${RANKS[t].name}</span>` : '';
+
   function summaryOf(uid) {
     const list = ENTRIES.filter(e => e.uid === uid);
     const timed = list.filter(e => e.startedAt > 0 && e.createdAt > e.startedAt);
@@ -2384,8 +2597,9 @@ const HEARTBEAT_MS = 60000;
       return `<section class="ach-tier t-${t}"><h4>${TIERS[t].label}${t === 'secret' ? ' 🔒' : ''}<small>${note}</small></h4>
         <div class="ach-grid">${items.map(a => achCard(a, s)).join('')}</div></section>`;
     }).join('');
-    const html = `<div class="ach-head" style="${cvars(p.color)}"><span class="avatar">${avHTML(p)}</span>
-        <div class="ach-total"><b>${got.length}</b><span>of ${ACH.length} unlocked</span>
+    const html = `<div class="ach-head" style="${cvars(p.color)}">${bannerHTML(p, '')}<span class="avatar">${avHTML(p)}</span>
+        <div class="ach-total"><b>${got.length}</b><span>of ${ACH.length} unlocked</span> ${rankChip(rankOf(s))}
+        <p class="rank-next">${rankNextText(s)}</p>
         <div class="bar"><div class="bar-fill" style="width:${(got.length / ACH.length * 100).toFixed(1)}%"></div></div></div></div>${tiers}`;
     const body = $('#achBody');
     if (body._h !== html) { body.innerHTML = html; body._h = html; }
@@ -2404,12 +2618,13 @@ const HEARTBEAT_MS = 60000;
     if (!a) return;
     unlockModal.className = `modal unlock t-${a.tier}`;
     $('#unlockMedal').textContent = a.ico;
-    $('#unlockKicker').textContent = a.tier === 'secret' ? '✨ Secret achievement unlocked ✨' : 'Achievement unlocked';
+    $('#unlockKicker').textContent = a.rankUp ? '🎖 Rank up! 🎖' : a.tier === 'secret' ? '✨ Secret achievement unlocked ✨' : 'Achievement unlocked';
+    unlockModal.classList.toggle('rank-up-pop', !!a.rankUp);
     $('#unlockName').textContent = a.name;
     $('#unlockDesc').textContent = a.desc;
-    $('#unlockTier').textContent = TIERS[a.tier].label;
+    $('#unlockTier').textContent = a.rankUp ? `${RANKS[a.tier].name} rank` : TIERS[a.tier].label;
     unlockModal.showModal();
-    if (TIERS[a.tier].rank >= 3) setTimeout(confetti, 250);
+    if (a.rankUp || TIERS[a.tier].rank >= 3) setTimeout(confetti, 250);
   }
   function checkMyAchievements() {
     const me = mine();
@@ -2425,10 +2640,16 @@ const HEARTBEAT_MS = 60000;
       b.set(FB.doc(S.db, 'profiles', me.uid, 'achievements', a.id), d);
       local[a.id] = d;
     });
+    const rankBefore = rankFrom(a => !!stored[a.id]);
     S.achs[me.uid] = local;           // mark now so a pop-up never shows twice
     b.commit().catch(() => {});
     if (!firstRun) {
       fresh.sort((x, y) => TIERS[x.tier].rank - TIERS[y.tier].rank).forEach(a => unlockQ.push(a));
+      const rankAfter = rankOf(SUM[me.uid]);
+      if (rankAfter && (!rankBefore || RANK_ORDER.indexOf(rankAfter) > RANK_ORDER.indexOf(rankBefore))) {
+        unlockQ.push({ rankUp: true, tier: rankAfter, ico: RANKS[rankAfter].ico, name: `${RANKS[rankAfter].name} Rank`,
+          desc: `You completed every ${TIERS[rankAfter].label} achievement. Your profile now wears the ${RANKS[rankAfter].name} border.` });
+      }
       nextUnlock();
     }
   }
@@ -2510,12 +2731,12 @@ const HEARTBEAT_MS = 60000;
   function podiumHTML(r) {
     const top = r.filter(x => !x.p.empty && x.points > 0);
     const block = (x, place) => x
-      ? `<div class="pod p${place}" style="${cvars(x.p.color)}">${place === 1 ? '<span class="crown-float">👑</span>' : ''}
-          <span class="avatar${x.p.clockedInAt ? ' ringing' : ''}" style="--r:${place === 1 ? 19 : 15}px">${avHTML(x.p)}</span>
-          <span class="pod-name">${esc(x.p.name)}</span><span class="pod-pts">${fmtPts(x.points)} pts · ${fmtH(x.hours)}</span>
+      ? `<div class="pod p${place}" style="${cvars(x.p.color)}"><div class="pod-top">${bannerHTML(x.p, 'pod-banner')}${place === 1 ? '<span class="crown-float">👑</span>' : ''}
+          <span class="avatar${x.p.clockedInAt ? ' ringing' : ''}" style="--r:${place === 1 ? 34 : 26}px">${avHTML(x.p)}</span>
+          <span class="pod-name">${esc(x.p.name)}</span><span class="pod-pts">${fmtPts(x.points)} pts · ${fmtH(x.hours)}</span></div>
           <div class="pod-block">${place}</div></div>`
-      : `<div class="pod p${place} vacant"><span class="avatar" style="${cvars('#8a8e86')}">＋</span>
-          <span class="pod-name">—</span><span class="pod-pts">&nbsp;</span><div class="pod-block">${place}</div></div>`;
+      : `<div class="pod p${place} vacant"><div class="pod-top"><span class="avatar" style="${cvars('#8a8e86')}">＋</span>
+          <span class="pod-name">—</span><span class="pod-pts">&nbsp;</span></div><div class="pod-block">${place}</div></div>`;
     return block(top[1], 2) + block(top[0], 1) + block(top[2], 3);
   }
 
@@ -2592,6 +2813,13 @@ const HEARTBEAT_MS = 60000;
       const a = ACH_BY_ID[id];
       if (a && d && !d.seeded && Number(d.at) >= since) ev.push({ k: 'a' + uid + id, t: Number(d.at), type: 'ach', uid, a });
     }));
+    /* Rank ups: the moment the last achievement of a tier was recorded. */
+    Object.entries(S.achs).forEach(([uid, docs]) => RANK_ORDER.forEach(t => {
+      const items = ACH.filter(a => a.tier === t);
+      if (!docs || !items.every(a => docs[a.id])) return;
+      const last = items.map(a => docs[a.id]).sort((x, y) => Number(y.at) - Number(x.at))[0];
+      if (last && !last.seeded && Number(last.at) >= since) ev.push({ k: 'r' + uid + t, t: Number(last.at) + 2, type: 'rank', uid, tier: t });
+    }));
     return ev.filter(x => byUid(x.uid)).sort((a, b) => b.t - a.t).slice(0, 25);
   }
   const reactKey = (uid, sid) => `${uid}__${sid}`;
@@ -2636,6 +2864,8 @@ const HEARTBEAT_MS = 60000;
         const a = x.a, chip = `<span class="feed-ach t-${a.tier}" title="${a.desc}">${a.ico} ${a.name}</span>`;
         text = a.tier === 'secret' ? `${nm} unlocked a <b>secret</b> achievement ${chip}` : `${nm} unlocked ${chip}`;
         meta += ` · ${TIERS[a.tier].label}`;
+      } else if (x.type === 'rank') {
+        text = `${nm} reached ${rankChip(x.tier)} rank 🎖`;
       }
       const isNew = feedPrimed && !seenFeed.has(x.k);
       seenFeed.add(x.k);
@@ -2748,8 +2978,10 @@ const HEARTBEAT_MS = 60000;
 
   /* Test hook for local development only (never present on the live site). */
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    window.__studyLeague = { S, confetti, renderRecap, shrinkPhoto: f => shrinkPhoto(f),
-      testUnlock: id => { unlockQ.push(ACH_BY_ID[id]); nextUnlock(); }, openAch: s => openAch(s), SUM: () => SUM, recapModal, ranked, periodStats, renderAll, currentStart, addDays, lbRows, prevRanks };
+    window.__studyLeague = { S, FB, confetti, renderRecap, shrinkPhoto: f => shrinkPhoto(f), buildParticipants, openAvatarPicker: () => openAvatarPicker(),
+      cropTest: (img, o) => cropImage(img, o),
+      testUnlock: id => { unlockQ.push(ACH_BY_ID[id]); nextUnlock(); },
+      testRankUp: t => { unlockQ.push({ rankUp: true, tier: t, ico: RANKS[t].ico, name: `${RANKS[t].name} Rank`, desc: `You completed every ${TIERS[t].label} achievement.` }); nextUnlock(); }, openAch: s => openAch(s), SUM: () => SUM, recapModal, ranked, periodStats, renderAll, currentStart, addDays, lbRows, prevRanks };
   }
 
   /* --- "You" card: my rank, points, streak and the gap to the next place --- */
@@ -2778,10 +3010,10 @@ const HEARTBEAT_MS = 60000;
       const need = above.points - meS.points + 1;
       gap = `<b>${fmtPts(above.points - meS.points)} pts</b> behind ${esc(above.p.name)} · about <b>${fmtH(minutesToGain(need) / 60)}</b> of study to pass`;
     }
-    const html = `
+    const html = `${bannerHTML(me, 'you-banner')}
       <button type="button" class="avatar you-av${me.clockedInAt ? ' ringing' : ''}" data-photo style="${cvars(me.color)};--r:20px" title="Change profile picture" aria-label="Change profile picture">${avHTML(me)}<span class="you-cam" aria-hidden="true">📷</span></button>
       <div class="you-main">
-        <p class="you-eyebrow">You this week</p>
+        <p class="you-eyebrow">You this week ${rankChip(rankOf(SUM[me.uid]))}</p>
         <p class="you-rank"><b>${RANK_TEXT[meS.rank - 1] || meS.rank + 'th'}</b><span> of ${r.length}</span></p>
         <p class="you-gap">${gap}</p>
       </div>
@@ -2792,6 +3024,8 @@ const HEARTBEAT_MS = 60000;
       </div>`;
     el.hidden = false;
     colorVars(el, me.color);
+    const myRank = rankOf(SUM[me.uid]);
+    if ((el.dataset.rank || '') !== (myRank || '')) { if (myRank) el.dataset.rank = myRank; else delete el.dataset.rank; }
     if (el._h !== html) { el.innerHTML = html; el._h = html; }
   }
 
@@ -2829,9 +3063,59 @@ const HEARTBEAT_MS = 60000;
     $('#removePhoto').hidden = !me.photo;
     $('#emojiGrid').innerHTML = AVATARS.map(a =>
       `<button type="button" class="${!me.photo && a === me.avatar ? 'selected' : ''}" data-emoji="${a}" aria-label="Use ${a}">${a}</button>`).join('');
+    const bp = $('#bannerPreview');
+    colorVars(bp, me.color);
+    applyBanner(bp, me);
+    bp.innerHTML = `<span class="avatar" style="${cvars(me.color)}">${avHTML(me)}</span>`;
+    const bg = $('#bannerGrid');
+    colorVars(bg, me.color);
+    bg.innerHTML = `<button type="button" class="banner${!me.bannerImg && !me.banner ? ' selected' : ''}" data-banner="" title="Default (your colour)" aria-label="Default banner"></button>`
+      + BANNERS.map(([id, label]) => `<button type="button" class="banner${!me.bannerImg && me.banner === id ? ' selected' : ''}" data-b="${id}" data-banner="${id}" title="${label}" aria-label="${label} banner"></button>`).join('');
+    $('#removeBanner').hidden = !me.bannerImg;
   }
+  async function setBanner(id) {
+    const me = mine();
+    if (!me || !S.me) return;
+    if (me.bannerImg) await FB.deleteDoc(FB.doc(S.db, 'banners', S.me)).catch(err => writeErr(err));
+    if (await updateMe({ banner: id || null })) toast('🎨 Banner updated');
+  }
+  $('#bannerGrid').addEventListener('click', e => {
+    const b = e.target.closest('[data-banner]');
+    if (b) setBanner(b.dataset.banner);
+  });
+  $('#bannerInput').addEventListener('change', async e => {
+    const file = e.target.files && e.target.files[0];
+    e.target.value = '';
+    if (!file) return;
+    if (!S.me) { toast('Log in to your profile first (tap "That\'s me" and enter your PIN).'); return; }
+    const status = $('#bannerStatus');
+    let data;
+    try {
+      const img = await decodeImage(file);
+      if (!img.w || !img.h) throw new Error('empty');
+      data = await cropImage(img, { title: 'Crop banner', aspect: BANNER_W / BANNER_H, radius: '12px', outW: BANNER_W, outH: BANNER_H, maxLen: 300000 });
+    } catch (err) { status.textContent = readErr(file); toast(status.textContent); return; }
+    if (!data) return;
+    status.textContent = 'Uploading…';
+    try {
+      await FB.setDoc(FB.doc(S.db, 'banners', S.me), { data, at: Date.now() });
+      status.textContent = '';
+      toast('🖼 Banner updated');
+    } catch (err) {
+      status.textContent = err && err.code === 'permission-denied'
+        ? 'The league didn\'t accept it: this device isn\'t linked to your profile. Log out and back in with your PIN, then try again.'
+        : 'Upload failed. Check your connection and try again.';
+      toast(status.textContent);
+    }
+  });
+  $('#removeBanner').addEventListener('click', async () => {
+    if (!S.me) return;
+    try { await FB.deleteDoc(FB.doc(S.db, 'banners', S.me)); toast('Banner image removed'); }
+    catch (err) { writeErr(err); }
+  });
   function openAvatarPicker() {
-    $('#photoStatus').textContent = 'Square crop, shrunk automatically.';
+    $('#photoStatus').textContent = 'You can drag and zoom to crop it.';
+    $('#bannerStatus').textContent = '';
     renderAvatarPicker();
     avatarModal.showModal();
   }
@@ -2847,37 +3131,127 @@ const HEARTBEAT_MS = 60000;
       img.src = url;
     });
   }
-  /* Center-crop to a square, shrink to 192px and compress to a small JPEG. */
+  /* Center-crop to a square, shrink and compress to a small JPEG (used without the cropper). */
   async function shrinkPhoto(file) {
-    const { src, w, h } = await decodeImage(file);
-    const side = Math.min(w, h);
+    const img = await decodeImage(file);
+    const side = Math.min(img.w, img.h);
     if (!side) throw Object.assign(new Error('empty'), { why: 'format' });
-    const c = document.createElement('canvas'); c.width = c.height = 192;
+    return renderCrop(img, (img.w - side) / 2, (img.h - side) / 2, side, side, PHOTO_OUT, PHOTO_OUT, 110000);
+  }
+  const PHOTO_OUT = 320;                 // profile photos: 320×320 (sharp on the big podium)
+  const BANNER_W = 960, BANNER_H = 320;  // banners: 3:1
+  function renderCrop(img, sx, sy, sw, sh, ow, oh, maxLen) {
+    const c = document.createElement('canvas'); c.width = ow; c.height = oh;
     const ctx = c.getContext('2d');
     ctx.imageSmoothingQuality = 'high';
-    ctx.drawImage(src, (w - side) / 2, (h - side) / 2, side, side, 0, 0, 192, 192);
-    if (src.close) src.close();
-    let q = .85, data = c.toDataURL('image/jpeg', q);
-    while (data.length > 60000 && q > .4) { q -= .1; data = c.toDataURL('image/jpeg', q); }
+    ctx.fillStyle = '#111316'; ctx.fillRect(0, 0, ow, oh);
+    ctx.drawImage(img.src, sx, sy, sw, sh, 0, 0, ow, oh);
+    let q = .86, data = c.toDataURL('image/jpeg', q);
+    while (data.length > maxLen && q > .35) { q -= .08; data = c.toDataURL('image/jpeg', q); }
     return data;
   }
+
+  /* Cropper: drag to move, pinch / wheel / slider to zoom. Resolves to a JPEG data URL, or null if cancelled. */
+  const cropModal = $('#cropModal');
+  let cropState = null;
+  function cropImage(img, opts) {
+    return new Promise(resolve => {
+      const stage = $('#cropStage'), canvas = $('#cropCanvas'), frame = $('#cropFrame'), zoom = $('#cropZoom');
+      $('#cropTitle').textContent = opts.title;
+      cropModal.showModal();
+      const W = stage.clientWidth || 360;
+      const H = Math.round(Math.min(W * (opts.aspect >= 2 ? .62 : 1), 440));
+      stage.style.height = H + 'px';
+      const pad = 22;
+      let fw = W - pad * 2, fh = fw / opts.aspect;
+      if (fh > H - pad * 2) { fh = H - pad * 2; fw = fh * opts.aspect; }
+      const fx = (W - fw) / 2, fy = (H - fh) / 2;
+      Object.assign(frame.style, { left: fx + 'px', top: fy + 'px', width: fw + 'px', height: fh + 'px', borderRadius: opts.radius || '0' });
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = W * dpr; canvas.height = H * dpr;
+      const ctx = canvas.getContext('2d');
+      const base = Math.max(fw / img.w, fh / img.h);   // smallest scale that still fills the frame
+      const st = { z: 1, cx: W / 2, cy: H / 2 };         // image centre on the stage
+      zoom.value = 1;
+      const clamp = () => {
+        const s = base * st.z, iw = img.w * s, ih = img.h * s;
+        st.cx = Math.min(fx + iw / 2, Math.max(fx + fw - iw / 2, st.cx));
+        st.cy = Math.min(fy + ih / 2, Math.max(fy + fh - ih / 2, st.cy));
+      };
+      const draw = () => {
+        clamp();
+        const s = base * st.z;
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.fillStyle = '#050506'; ctx.fillRect(0, 0, W, H);
+        ctx.imageSmoothingQuality = 'high';
+        ctx.drawImage(img.src, st.cx - img.w * s / 2, st.cy - img.h * s / 2, img.w * s, img.h * s);
+      };
+      const setZoom = (z, ax = fx + fw / 2, ay = fy + fh / 2) => {
+        z = Math.min(5, Math.max(1, z));
+        const k = z / st.z;
+        st.cx = ax + (st.cx - ax) * k; st.cy = ay + (st.cy - ay) * k; st.z = z;
+        zoom.value = z; draw();
+      };
+      const pts = new Map(); let pinch = null;
+      const local = e => { const r = stage.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+      const onDown = e => { stage.setPointerCapture(e.pointerId); pts.set(e.pointerId, local(e)); if (pts.size === 2) pinch = null; };
+      const onMove = e => {
+        if (!pts.has(e.pointerId)) return;
+        const prev = pts.get(e.pointerId), cur = local(e);
+        pts.set(e.pointerId, cur);
+        if (pts.size === 1) { st.cx += cur[0] - prev[0]; st.cy += cur[1] - prev[1]; draw(); return; }
+        const [a, b] = [...pts.values()];
+        const d = Math.hypot(a[0] - b[0], a[1] - b[1]), mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+        if (pinch) { st.cx += mx - pinch.mx; st.cy += my - pinch.my; setZoom(st.z * d / pinch.d, mx, my); }
+        pinch = { d, mx, my };
+      };
+      const onUp = e => { pts.delete(e.pointerId); pinch = null; };
+      const onWheel = e => { e.preventDefault(); const [x, y] = local(e); setZoom(st.z * Math.exp(-e.deltaY * .0015), x, y); };
+      const onZoom = () => setZoom(Number(zoom.value));
+      stage.addEventListener('pointerdown', onDown); stage.addEventListener('pointermove', onMove);
+      stage.addEventListener('pointerup', onUp); stage.addEventListener('pointercancel', onUp);
+      stage.addEventListener('wheel', onWheel, { passive: false }); zoom.addEventListener('input', onZoom);
+      const finish = val => {
+        stage.removeEventListener('pointerdown', onDown); stage.removeEventListener('pointermove', onMove);
+        stage.removeEventListener('pointerup', onUp); stage.removeEventListener('pointercancel', onUp);
+        stage.removeEventListener('wheel', onWheel); zoom.removeEventListener('input', onZoom);
+        cropState = null;
+        if (cropModal.open) cropModal.close();
+        if (img.src.close) img.src.close();
+        resolve(val);
+      };
+      cropState = {
+        save: () => {
+          const s = base * st.z;
+          const sx = (fx - (st.cx - img.w * s / 2)) / s, sy = (fy - (st.cy - img.h * s / 2)) / s;
+          finish(renderCrop(img, sx, sy, fw / s, fh / s, opts.outW, opts.outH, opts.maxLen));
+        },
+        cancel: () => finish(null)
+      };
+      draw();
+    });
+  }
+  $('#cropSave').addEventListener('click', () => cropState && cropState.save());
+  cropModal.addEventListener('click', e => { if (e.target.closest('[data-crop-cancel]') && cropState) cropState.cancel(); });
+  cropModal.addEventListener('cancel', e => { e.preventDefault(); if (cropState) cropState.cancel(); });
+
+  const readErr = file => (/hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name))
+    ? 'This browser can\'t read iPhone HEIC photos. Take a screenshot of the photo and upload that, or try from Safari.'
+    : 'That file couldn\'t be read as an image. Try a different photo (JPG or PNG work best).';
   $('#photoInput').addEventListener('change', async e => {
     const file = e.target.files && e.target.files[0];
     e.target.value = '';
     if (!file) return;
     if (!S.me) { toast('Log in to your profile first (tap "That\'s me" and enter your PIN).'); return; }
     const status = $('#photoStatus');
-    status.textContent = 'Uploading…';
     let data;
-    try { data = await shrinkPhoto(file); }
-    catch (err) {
-      const heic = /hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name);
-      status.textContent = heic
-        ? 'This browser can\'t read iPhone HEIC photos. Take a screenshot of the photo and upload that, or try from Safari.'
-        : 'That file couldn\'t be read as an image. Try a different photo (JPG or PNG work best).';
-      toast(status.textContent);
-      return;
-    }
+    try {
+      const img = await decodeImage(file);
+      if (!img.w || !img.h) throw new Error('empty');
+      data = await cropImage(img, { title: 'Crop profile photo', aspect: 1, radius: '28%', outW: PHOTO_OUT, outH: PHOTO_OUT, maxLen: 110000 });
+    } catch (err) { status.textContent = readErr(file); toast(status.textContent); return; }
+    if (!data) return;
+    status.textContent = 'Uploading…';
     try {
       await FB.setDoc(FB.doc(S.db, 'photos', S.me), { data, at: Date.now() });
       status.textContent = 'Saved!';
@@ -2996,11 +3370,12 @@ const HEARTBEAT_MS = 60000;
     Object.keys(sessionSubs).forEach(uid => { sessionSubs[uid](); delete sessionSubs[uid]; });
     Object.keys(reactSubs).forEach(uid => { reactSubs[uid](); delete reactSubs[uid]; });
     if (photosUnsub) { photosUnsub(); photosUnsub = null; }
+    if (bannersUnsub) { bannersUnsub(); bannersUnsub = null; }
     if (chatUnsub) { chatUnsub(); chatUnsub = null; }
     Object.keys(achSubs).forEach(uid => { achSubs[uid](); delete achSubs[uid]; });
-    S.members = {}; S.sessions = {}; S.reactions = {}; S.photos = {}; S.achs = {}; S.achLoaded = {}; S.loaded = false;
+    S.members = {}; S.sessions = {}; S.reactions = {}; S.photos = {}; S.banners = {}; S.achs = {}; S.achLoaded = {}; S.loaded = false;
   }
-  let photosUnsub = null;
+  let photosUnsub = null, bannersUnsub = null;
 
   /* Online heartbeat: while the page is open and visible, refresh lastSeen once a minute. */
   function beat() {
@@ -3040,6 +3415,13 @@ const HEARTBEAT_MS = 60000;
       const m = {};
       snap.docs.forEach(d => { m[d.id] = d.data(); });
       S.photos = m;
+      renderAll();
+      if (avatarModal.open) renderAvatarPicker();
+    }, () => {});
+    bannersUnsub = FB.onSnapshot(FB.collection(S.db, 'banners'), snap => {
+      const m = {};
+      snap.docs.forEach(d => { m[d.id] = d.data(); });
+      S.banners = m;
       renderAll();
       if (avatarModal.open) renderAvatarPicker();
     }, () => {});

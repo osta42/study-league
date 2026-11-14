@@ -39,13 +39,21 @@ service cloud.firestore {
       return d.emoji in ['🔥', '👏', '💀'] && d.target is string && d.sid is string;
     }
 
+    // The league join code. Set by the owner in the Firebase console; nobody can read or change it from the site.
+    match /config/{doc} {
+      allow read, write: if false;
+    }
+
     // PIN for each spot. Write-once while the spot is still free; never readable.
+    // Claiming a spot also requires the correct league join code.
     match /secrets/{pid} {
       allow read: if false;
       allow create, update: if signedIn() && validSlot(pid)
         && !exists(/databases/$(database)/documents/profiles/$(pid))
         && request.resource.data.pin is string
-        && request.resource.data.pin.matches('^[0-9]{4}$');
+        && request.resource.data.pin.matches('^[0-9]{4}$')
+        && request.resource.data.code is string
+        && request.resource.data.code == get(/databases/$(database)/documents/config/join).data.code;
       allow delete: if false;
     }
 
@@ -93,6 +101,16 @@ service cloud.firestore {
       allow create, update: if validSlot(pid) && linked(pid)
         && request.resource.data.data is string
         && request.resource.data.data.size() < 200000
+        && request.resource.data.data.matches('data:image/(jpeg|png|webp);base64,.+');
+      allow delete: if linked(pid);
+    }
+
+    // Custom profile banners: one image per spot, changeable only by that player.
+    match /banners/{pid} {
+      allow read: if signedIn();
+      allow create, update: if validSlot(pid) && linked(pid)
+        && request.resource.data.data is string
+        && request.resource.data.data.size() < 400000
         && request.resource.data.data.matches('data:image/(jpeg|png|webp);base64,.+');
       allow delete: if linked(pid);
     }
