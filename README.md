@@ -5,7 +5,6 @@ A live study competition for up to 6 friends. Open the link, pick a spot, type y
 Live site: https://osta42.github.io/study-league/
 
 - **Scoring per session:** hour 1 = 100 pts, hour 2 = 110, hour 3 = 120 (each extra full hour is worth 10 more); leftover minutes = 1 pt each. So 45m = 45, 1h 30m = 130, 2h = 210, 3h = 330.
-- **Study together:** timed sessions earn +10% for the time friends were clocked in with you.
 - Weekly (Monday–Sunday), monthly and yearly leaderboards with an animated top-3 podium. Totals reset on their own; study sessions are never deleted.
 - 🔥 Daily streaks, badges, weeks-won counts, last week's champion crown, and a Monday recap.
 - Live feed of clock-ins, sessions and lead changes, with 🔥 👏 💀 reactions.
