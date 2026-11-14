@@ -72,6 +72,13 @@ service cloud.firestore {
         allow delete: if linked(pid);
       }
 
+      // Achievement unlock records (shown in the live feed). Can't be deleted.
+      match /achievements/{aid} {
+        allow read: if signedIn();
+        allow create, update: if linked(pid) && aid.size() <= 24 && request.resource.data.at is int;
+        allow delete: if false;
+      }
+
       // Reactions this player gave to other players' sessions.
       match /reactions/{reactionId} {
         allow read: if signedIn();
@@ -88,6 +95,18 @@ service cloud.firestore {
         && request.resource.data.data.size() < 200000
         && request.resource.data.data.matches('data:image/(jpeg|png|webp);base64,.+');
       allow delete: if linked(pid);
+    }
+
+    // League chat: anyone in the league reads; you can only post as yourself and delete your own.
+    match /chat/{msgId} {
+      allow read: if signedIn();
+      allow create: if request.resource.data.pid is string && validSlot(request.resource.data.pid)
+        && linked(request.resource.data.pid)
+        && request.resource.data.text is string
+        && request.resource.data.text.size() >= 1 && request.resource.data.text.size() <= 300
+        && request.resource.data.at is int;
+      allow update: if false;
+      allow delete: if resource.data.pid is string && linked(resource.data.pid);
     }
 
     // Everything else is closed.

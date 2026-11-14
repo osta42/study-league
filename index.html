@@ -137,6 +137,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid rgba(255, 138, 61
 .h-icon svg { width: 16px; height: 16px; }
 .hint { color: var(--muted); font-size: .82rem; }
 .hint.center { text-align: center; margin-top: 16px; }
+.hint.version { font-size: .7rem; color: var(--faint); margin-top: 18px; }
 
 /* ---------- Top bar ---------- */
 .top { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; padding: 4px 2px; }
@@ -752,6 +753,130 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
 .badges.show-all .badge-ico.locked { display: grid; }
 .badges.show-all .badge-more { color: var(--lime); border-color: rgba(200, 255, 61, .45); }
 
+/* ===== Achievements ===== */
+.t-bronze { --tc: #d39467; } .t-silver { --tc: #c9d1de; } .t-gold { --tc: #f0c75e; } .t-platinum { --tc: #9ff0ff; } .t-secret { --tc: #c8ff3d; }
+.rainbow-ring::before, .ach-mini.t-secret::before, .unlock.t-secret .unlock-medal::before, .ach-card.secret.unlocked::before {
+  content: ""; position: absolute; inset: -3px; border-radius: inherit; padding: 3px; pointer-events: none;
+  background: conic-gradient(from var(--ang), #ff5c8a, #ffb13d, #c8ff3d, #3ee0b5, #4cc2ff, #a78bfa, #ff5c8a);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box exclude, linear-gradient(#000 0 0);
+  animation: spin 3s linear infinite;
+}
+.ach-mini {
+  position: relative; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-size: 15px; cursor: default;
+  background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .2), rgba(255, 255, 255, .03) 60%), #16181b;
+  box-shadow: 0 0 0 2px var(--tc), 0 4px 12px -4px var(--tc); transition: transform .25s var(--spring);
+}
+.ach-mini:hover { transform: translateY(-2px) scale(1.12); }
+.ach-mini.t-platinum { animation: platGlow 2.8s ease-in-out infinite; }
+@keyframes platGlow { 50% { box-shadow: 0 0 0 2px var(--tc), 0 0 18px -2px rgba(159, 240, 255, .9); } }
+.ach-mini.t-secret { width: 40px; height: 40px; font-size: 21px; box-shadow: 0 0 22px -4px rgba(200, 255, 61, .7); animation: secretPulse 2.4s ease-in-out infinite; }
+.ach-mini.t-secret::after, .unlock.t-secret .unlock-medal::after {
+  content: ""; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(115deg, transparent 35%, rgba(255, 255, 255, .5) 50%, transparent 65%); background-size: 260% 100%;
+  animation: sheen2 2.6s ease-in-out infinite;
+}
+@keyframes sheen2 { 0% { background-position: 160% 0; } 60%, 100% { background-position: -100% 0; } }
+@keyframes secretPulse { 50% { box-shadow: 0 0 30px -2px rgba(200, 255, 61, .9), 0 0 50px -10px rgba(167, 139, 250, .8); transform: scale(1.06); } }
+.badges .badge-more { display: inline-flex; align-items: center; gap: 4px; }
+
+.modal.xl { width: min(900px, calc(100vw - 32px)); }
+.modal.xl .modal-inner { max-height: calc(100vh - 40px); overflow-y: auto; }
+.ach-head { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: var(--radius); background: var(--inset); border: 1px solid var(--line); }
+.ach-head .avatar { width: 52px; height: 52px; font-size: 26px; border-radius: 16px; }
+.ach-total { flex: 1; min-width: 0; }
+.ach-total b { font-family: var(--display); font-size: 1.3rem; }
+.ach-total span { color: var(--muted); font-size: .85rem; margin-left: 6px; }
+.ach-total .bar { margin-top: 8px; height: 8px; }
+.ach-total .bar-fill { background: linear-gradient(90deg, #d39467, #c9d1de, #f0c75e, #9ff0ff, #c8ff3d); }
+.ach-tier { margin-top: 20px; }
+.ach-tier h4 { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-family: var(--display); font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--tc); }
+.ach-tier h4::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: var(--tc); box-shadow: 0 0 10px var(--tc); }
+.ach-tier h4 small { margin-left: auto; color: var(--muted); letter-spacing: 0; text-transform: none; font-family: var(--font); font-weight: 600; font-size: .78rem; }
+.ach-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 10px; }
+.ach-card { position: relative; display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 14px; border: 1px solid var(--line); background: rgba(255, 255, 255, .025); min-width: 0; }
+.ach-card.unlocked { border-color: color-mix(in srgb, var(--tc) 45%, transparent); background: linear-gradient(135deg, color-mix(in srgb, var(--tc) 13%, transparent), rgba(255, 255, 255, .02) 65%); }
+.ach-medal {
+  position: relative; flex-shrink: 0; width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-size: 22px;
+  background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .22), rgba(255, 255, 255, .03) 60%), #16181b;
+  box-shadow: 0 0 0 2px var(--tc), 0 6px 16px -6px var(--tc);
+}
+.ach-card.locked .ach-medal { filter: grayscale(1); opacity: .42; box-shadow: 0 0 0 2px var(--line-2); }
+.ach-info { flex: 1; min-width: 0; }
+.ach-info b { display: block; font-size: .9rem; }
+.ach-info small { display: block; color: var(--muted); font-size: .76rem; line-height: 1.3; }
+.ach-prog { height: 5px; border-radius: 99px; background: rgba(255, 255, 255, .07); margin-top: 7px; overflow: hidden; }
+.ach-prog i { display: block; height: 100%; border-radius: inherit; background: var(--tc); transition: width .8s var(--ease); }
+.ach-info em { display: block; font-style: normal; font-size: .7rem; color: var(--muted); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.ach-card.unlocked em { color: var(--tc); font-weight: 700; }
+.ach-card.secret.locked { border-style: dashed; }
+.ach-card.secret.locked .ach-medal { filter: none; opacity: .6; font-family: var(--display); font-weight: 700; color: var(--muted); font-size: 20px; }
+.ach-card.secret.unlocked {
+  grid-column: span 2; padding: 16px; border-color: transparent;
+  background: linear-gradient(120deg, rgba(255, 92, 138, .2), rgba(255, 177, 61, .15), rgba(200, 255, 61, .17), rgba(76, 194, 255, .17), rgba(167, 139, 250, .2));
+  background-size: 300% 300%; animation: holo 6s ease infinite;
+}
+.ach-card.secret.unlocked::before { border-radius: 14px; inset: -1px; padding: 1.5px; }
+.ach-card.secret.unlocked .ach-medal { width: 64px; height: 64px; font-size: 32px; box-shadow: 0 0 30px -4px rgba(200, 255, 61, .7); animation: secretPulse 2.4s ease-in-out infinite; }
+.ach-card.secret.unlocked b { font-family: var(--display); font-size: 1.05rem; }
+@keyframes holo { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+
+/* Unlock pop-up */
+.unlock { text-align: center; overflow: hidden; width: min(400px, calc(100vw - 32px)); }
+.unlock .modal-inner { position: relative; padding: 34px 26px 24px; overflow: hidden; }
+.unlock .modal-inner > :not(.unlock-rays) { position: relative; z-index: 1; }
+.unlock-rays {
+  position: absolute; left: 50%; top: 90px; width: 560px; height: 560px; margin: -280px 0 0 -280px; border-radius: 50%; pointer-events: none;
+  background: repeating-conic-gradient(from 0deg, color-mix(in srgb, var(--tc) 26%, transparent) 0deg 9deg, transparent 9deg 18deg);
+  -webkit-mask: radial-gradient(circle, #000 15%, transparent 62%); mask: radial-gradient(circle, #000 15%, transparent 62%);
+  animation: rays 16s linear infinite;
+}
+@keyframes rays { to { transform: rotate(360deg); } }
+.unlock-medal {
+  position: relative; width: 116px; height: 116px; margin: 0 auto 18px; border-radius: 50%; display: grid; place-items: center; font-size: 56px;
+  background: radial-gradient(circle at 30% 25%, rgba(255, 255, 255, .3), rgba(255, 255, 255, .04) 60%), #16181b;
+  box-shadow: 0 0 0 3px var(--tc), 0 0 60px -6px var(--tc);
+  animation: medalIn 1s var(--spring) both, floaty 3s ease-in-out 1s infinite;
+}
+@keyframes medalIn { 0% { transform: scale(.2) rotate(-40deg); opacity: 0; } 60% { transform: scale(1.14) rotate(8deg); opacity: 1; } 100% { transform: none; } }
+.unlock-kicker { font-size: .7rem; font-weight: 800; letter-spacing: .22em; text-transform: uppercase; color: var(--tc); }
+.unlock h3 { font-family: var(--display); font-size: 1.65rem; margin: 6px 0; }
+.unlock p#unlockDesc { color: var(--text-2); }
+.tier-pill { display: inline-block; margin-top: 12px; padding: 3px 11px; border-radius: 99px; border: 1px solid var(--tc); color: var(--tc); font-size: .7rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+.unlock.t-secret .unlock-medal { width: 140px; height: 140px; font-size: 68px; box-shadow: 0 0 70px -4px rgba(200, 255, 61, .8), 0 0 120px -20px rgba(167, 139, 250, .9); }
+.unlock.t-secret h3 { background: linear-gradient(90deg, #ff5c8a, #ffb13d, #c8ff3d, #4cc2ff, #a78bfa); background-size: 200% 100%; -webkit-background-clip: text; background-clip: text; color: transparent; animation: holo 4s ease infinite; }
+
+/* Achievements in the live feed */
+.feed-ach {
+  display: inline-flex; align-items: center; gap: 5px; padding: 1px 9px 1px 5px; border-radius: 99px; white-space: nowrap; font-weight: 700;
+  border: 1px solid color-mix(in srgb, var(--tc) 50%, transparent); background: color-mix(in srgb, var(--tc) 12%, transparent); color: var(--tc);
+}
+.feed-ach.t-secret { color: #fff; border-color: transparent; background: linear-gradient(90deg, rgba(255, 92, 138, .35), rgba(200, 255, 61, .3), rgba(76, 194, 255, .35)); background-size: 200% 100%; animation: holo 4s ease infinite; }
+
+/* Chat */
+.feed-tabs .badge-count { display: inline-grid; place-items: center; min-width: 17px; height: 17px; padding: 0 5px; margin-left: 6px; border-radius: 99px; background: var(--cyan); color: #1a0a00; font-size: .64rem; font-weight: 800; }
+.chat { display: flex; flex-direction: column; gap: 10px; }
+.chat-list { display: flex; flex-direction: column; gap: 9px; height: 380px; overflow-y: auto; padding: 2px 4px 2px 0; overscroll-behavior: contain; }
+.chat-list::-webkit-scrollbar { width: 6px; }
+.chat-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .08); border-radius: 6px; }
+.msg { display: flex; gap: 8px; align-items: flex-end; max-width: 88%; }
+.msg.mine { align-self: flex-end; flex-direction: row-reverse; }
+.msg .avatar.sm { width: 28px; height: 28px; font-size: 14px; border-radius: 9px; box-shadow: none; }
+.msg.new { animation: rise .3s var(--ease) both; }
+.bubble { min-width: 0; padding: 7px 11px 8px; border-radius: 14px 14px 14px 4px; background: rgba(255, 255, 255, .05); border: 1px solid var(--line); }
+.msg.mine .bubble { border-radius: 14px 14px 4px 14px; background: rgba(200, 255, 61, .12); border-color: rgba(200, 255, 61, .3); }
+.bubble .who { display: flex; gap: 7px; align-items: baseline; font-size: .7rem; font-weight: 700; color: var(--c); }
+.bubble .who time { color: var(--faint); font-weight: 500; }
+.bubble p { font-size: .9rem; color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg-del { align-self: center; opacity: 0; font-size: .72rem; color: var(--muted); padding: 2px 4px; transition: opacity .2s, color .2s; }
+.msg:hover .msg-del, .msg:focus-within .msg-del { opacity: 1; }
+.msg-del:hover { color: var(--danger); }
+.chat-day { align-self: center; font-size: .68rem; color: var(--faint); text-transform: uppercase; letter-spacing: .1em; margin: 4px 0; }
+.chat-form { display: flex; gap: 8px; }
+.chat-form input { flex: 1; min-width: 0; }
+.chat-send { padding: 0 16px; font-size: 1rem; }
+@media (hover: none) { .msg-del { opacity: .55; } }
+
 /* Floating clock button (phones only) */
 .fab { display: none; }
 
@@ -808,6 +933,10 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
   .pod.p3 .pod-block { height: 30px; }
   .pod-pts { font-size: .68rem; }
   .recap-kpis { grid-template-columns: 1fr 1fr; }
+  .ach-grid { grid-template-columns: minmax(0, 1fr); }
+  .ach-card.secret.unlocked { grid-column: auto; }
+  .chat-list { height: 320px; }
+  .feed-tabs { margin-left: auto; }
   .you-card { grid-template-columns: auto minmax(0, 1fr); gap: 14px; padding: 16px; }
   .you-av { width: 54px; height: 54px; font-size: 27px; }
   .you-rank b { font-size: 1.6rem; }
@@ -978,6 +1107,7 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
     </div>
     <div class="cal-grid" id="calGrid"></div>
     <div class="year-view" id="yearView" hidden></div>
+    <p class="hint center version" id="version"></p>
     <p class="hint center">Click any day to see or log study hours · in one session, hour 1 = 100 pts, hour 2 = 110, hour 3 = 120… · extra minutes = 1 pt each</p>
   </section>
 </main>
@@ -1195,6 +1325,7 @@ if (typeof HTMLDialogElement !== 'function' || !HTMLDialogElement.prototype.show
 }
 
 const FB = { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, collection, doc, onSnapshot, getDoc, setDoc, updateDoc, deleteDoc, writeBatch, query, orderBy, limit };
+const APP_VERSION = '1.8 (achievements + chat)';   // shown at the bottom of the page; bump on each update
 const ONLINE_WINDOW_MS = 150000;   // seen in the last 2.5 minutes = online
 const HEARTBEAT_MS = 60000;
 
@@ -1316,6 +1447,8 @@ const HEARTBEAT_MS = 60000;
     members: {},         // uid -> member doc
     reactions: {},       // uid -> { "<target>__<session>": { emoji, target, sid, at } }
     photos: {},          // spot -> { data, at }
+    achs: {},            // spot -> { achievementId: { at, seeded } }
+    achLoaded: {},       // spot -> true once its achievements have loaded
     sessions: {},        // uid -> { sid -> session }
     online: new Set(),   // uids with the page open
     roomOk: false,
@@ -1612,10 +1745,9 @@ const HEARTBEAT_MS = 60000;
       const bEl = el.querySelector('.badges');
       bEl.hidden = !sum;
       if (sum) {
-        const got = BADGES.filter(b => b.test(sum)), locked = BADGES.filter(b => !b.test(sum));
-        const bh = got.map(b => `<span class="badge-ico" title="${b.name}: ${b.desc}">${b.ico}</span>`).join('')
-          + `<button type="button" class="badge-more" data-badges="${p.slot}" title="Show all badges">${got.length}/${BADGES.length}</button>`
-          + locked.map(b => `<span class="badge-ico locked" title="${b.name} (locked): ${b.desc}">${b.ico}</span>`).join('');
+        const got = achOf(sum).sort((a, b) => TIERS[b.tier].rank - TIERS[a.tier].rank);
+        const bh = got.slice(0, 7).map(a => `<span class="ach-mini t-${a.tier}" title="${a.name} · ${TIERS[a.tier].label}: ${a.desc}">${a.ico}</span>`).join('')
+          + `<button type="button" class="badge-more" data-ach="${p.slot}" title="See all achievements">🏅 ${got.length}/${ACH.length}</button>`;
         if (bEl._h !== bh) { bEl.innerHTML = bh; bEl._h = bh; }
       }
       ['w', 'm', 'y'].forEach(k => {
@@ -1714,6 +1846,9 @@ const HEARTBEAT_MS = 60000;
       renderCalendar();
       if ($('#dayModal').open) renderDayEntries();
       if ($('#historyModal').open) renderHistory();
+      if (achModal.open) renderAch();
+      renderChat();
+      checkMyAchievements();
     });
   }
 
@@ -2099,17 +2234,39 @@ const HEARTBEAT_MS = 60000;
     const cur = ymd(currentStart('week')), lastKey = ymd(addDays(currentStart('week'), -7));
     const weeks = new Set();
     ENTRIES.forEach(e => { const k = ymd(startOfWeek(parseYmd(e.date))); if (k < cur) weeks.add(k); });
-    const wins = {}, medals = {}; let last = [];
+    const wins = {}, medals = {}, winners = {}; let last = [];
     weeks.forEach(k => {
       const r = ranked(periodStats('week', parseYmd(k))).filter(x => x.points > 0 && !x.p.empty && x.rank <= 3);
+      winners[k] = new Set();
       r.forEach(x => {
         const m = medals[x.p.uid] || (medals[x.p.uid] = [0, 0, 0]);
         m[x.rank - 1]++;
-        if (x.rank === 1) wins[x.p.uid] = (wins[x.p.uid] || 0) + 1;
+        if (x.rank === 1) { wins[x.p.uid] = (wins[x.p.uid] || 0) + 1; winners[k].add(x.p.uid); }
       });
       if (k === lastKey) last = r.filter(x => x.rank === 1).map(x => x.p.uid);
     });
-    return { wins, medals, last };
+    /* Longest run of consecutive weeks won, and "won every week of a finished month". */
+    const goldRun = {}, perfect = new Set();
+    const keys = Object.keys(winners).sort();
+    const run = {};
+    keys.forEach((k, i) => {
+      const prevK = ymd(addDays(parseYmd(k), -7));
+      winners[k].forEach(uid => {
+        run[uid] = (winners[prevK] && winners[prevK].has(uid)) ? (run[uid] || 0) + 1 : 1;
+        goldRun[uid] = Math.max(goldRun[uid] || 0, run[uid]);
+      });
+    });
+    const months = new Set(keys.map(k => k.slice(0, 7)));
+    months.forEach(mk => {
+      const [y, mo] = mk.split('-').map(Number);
+      const mondays = [];
+      for (let d = new Date(y, mo - 1, 1); d.getMonth() === mo - 1; d = addDays(d, 1)) if (d.getDay() === 1) mondays.push(ymd(d));
+      if (mondays.length < 4 || ymd(addDays(parseYmd(mondays[mondays.length - 1]), 7)) > cur) return;   // month must be finished
+      const first = winners[mondays[0]];
+      if (!first) return;
+      first.forEach(uid => { if (mondays.every(m => winners[m] && winners[m].has(uid))) perfect.add(uid); });
+    });
+    return { wins, medals, last, goldRun, perfect };
   }
   function medalsHTML(uid) {
     const m = WW.medals[uid] || [0, 0, 0];
@@ -2118,33 +2275,234 @@ const HEARTBEAT_MS = 60000;
       `<span class="medal ${cls}${m[i] ? '' : ' none'}" title="${m[i]} week${m[i] === 1 ? '' : 's'} finished ${place}"><i>${ico}</i><b>${m[i]}</b></span>`).join('');
   }
 
-  /* --- Badges --- */
-  const BADGES = [
-    { ico: '🌱', name: 'First Hour', desc: 'Study 1 hour in total', test: s => s.total >= 1 },
-    { ico: '🏃', name: 'Marathon', desc: 'One session of 4 hours or more', test: s => s.longest >= 4 },
-    { ico: '🦉', name: 'Night Owl', desc: 'Clock out after 11pm', test: s => s.owl },
-    { ico: '🐦', name: 'Early Bird', desc: 'Clock in before 7am', test: s => s.bird },
-    { ico: '🔥', name: 'On Fire', desc: 'Reach a 7-day streak', test: s => s.streak.best >= 7 },
-    { ico: '🏆', name: 'Dynasty', desc: 'Win 3 weeks', test: s => s.wins >= 3 },
-    { ico: '💯', name: 'Century', desc: 'Study 100 hours in total', test: s => s.total >= 100 }
+  /* --- Achievements: 4 visible tiers + secret ones (hidden until unlocked) --- */
+  const TIERS = {
+    bronze: { label: 'Bronze', rank: 1 }, silver: { label: 'Silver', rank: 2 }, gold: { label: 'Gold', rank: 3 },
+    platinum: { label: 'Platinum', rank: 4 }, secret: { label: 'Secret', rank: 5 }
+  };
+  const flag = v => [v ? 1 : 0, 1];
+  const ACH = [
+    { id: 'first', tier: 'bronze', ico: '🌱', name: 'First Steps', desc: 'Log your first study session', prog: s => [s.sessions, 1] },
+    { id: 'clock', tier: 'bronze', ico: '⏱️', name: 'Clocked In', desc: 'Finish a session with the timer', prog: s => [s.timed, 1] },
+    { id: 'hour', tier: 'bronze', ico: '🕐', name: 'First Hour', desc: 'Study 1 hour in total', prog: s => [s.total, 1], unit: 'h' },
+    { id: 'hype', tier: 'bronze', ico: '📣', name: 'Hype Man', desc: 'React to 5 sessions', prog: s => [s.given, 5] },
+    { id: 'fire', tier: 'silver', ico: '🔥', name: 'On Fire', desc: 'Reach a 7-day streak', prog: s => [s.streak.best, 7] },
+    { id: 'marathon', tier: 'silver', ico: '🏃', name: 'Marathon', desc: 'Study 4 hours in one session', prog: s => [s.longest, 4], unit: 'h' },
+    { id: 'owl', tier: 'silver', ico: '🦉', name: 'Night Owl', desc: 'Clock out after 11pm', prog: s => flag(s.owl) },
+    { id: 'bird', tier: 'silver', ico: '🐦', name: 'Early Bird', desc: 'Clock in before 7am', prog: s => flag(s.bird) },
+    { id: 'poly', tier: 'silver', ico: '📚', name: 'Polymath', desc: 'Study 5 different subjects', prog: s => [s.subjects, 5] },
+    { id: 'podium', tier: 'silver', ico: '🥉', name: 'On the Podium', desc: 'Finish a week in the top 3', prog: s => [s.medalsTotal, 1] },
+    { id: 'fullweek', tier: 'silver', ico: '📅', name: 'Full Week', desc: 'Study all 7 days of one week', prog: s => [s.bestWeekDays, 7] },
+    { id: 'century', tier: 'gold', ico: '💯', name: 'Century', desc: 'Study 100 hours in total', prog: s => [s.total, 100], unit: 'h' },
+    { id: 'grind', tier: 'gold', ico: '🌋', name: 'Grind Day', desc: 'Study 10 hours in a single day', prog: s => [s.bestDay, 10], unit: 'h' },
+    { id: 'unstop', tier: 'gold', ico: '⚡', name: 'Unstoppable', desc: 'Reach a 30-day streak', prog: s => [s.streak.best, 30] },
+    { id: 'dynasty', tier: 'gold', ico: '🏆', name: 'Dynasty', desc: 'Win 3 weeks', prog: s => [s.wins, 3] },
+    { id: 'fan', tier: 'gold', ico: '❤️', name: 'Fan Favourite', desc: 'Receive 25 reactions', prog: s => [s.received, 25] },
+    { id: 'diamond', tier: 'platinum', ico: '💎', name: 'Diamond Mind', desc: 'Study 500 hours in total', prog: s => [s.total, 500], unit: 'h' },
+    { id: 'untouch', tier: 'platinum', ico: '👑', name: 'Untouchable', desc: 'Win 4 weeks in a row', prog: s => [s.goldRun, 4] },
+    { id: 'iron', tier: 'platinum', ico: '🗿', name: 'Iron Will', desc: 'Reach a 100-day streak', prog: s => [s.streak.best, 100] },
+    /* Secret: shown as "???" until someone unlocks them. */
+    { id: 'legend', tier: 'secret', ico: '🌌', name: 'Legend of the League', desc: 'Studied 1,000 hours in total', prog: s => [s.total, 1000], unit: 'h' },
+    { id: 'monk', tier: 'secret', ico: '🧘', name: 'The Monk', desc: 'One timed session of 12 hours or more', prog: s => flag(s.monk) },
+    { id: 'pixel', tier: 'secret', ico: '🎯', name: 'Pixel Perfect', desc: 'Clocked out at exactly 1:00:00 on the timer', prog: s => flag(s.pixel) },
+    { id: 'perfect', tier: 'secret', ico: '🌕', name: 'Perfect Month', desc: 'Won every week of a calendar month', prog: s => flag(s.perfectMonth) },
+    { id: 'goat', tier: 'secret', ico: '🐐', name: 'G.O.A.T.', desc: 'A 365-day streak', prog: s => [s.streak.best, 365] }
   ];
+  const ACH_BY_ID = Object.fromEntries(ACH.map(a => [a.id, a]));
+  const achDone = (a, s) => { const [c, t] = a.prog(s); return c >= t; };
+  const achOf = s => s ? ACH.filter(a => achDone(a, s)) : [];
+
   function summaryOf(uid) {
     const list = ENTRIES.filter(e => e.uid === uid);
-    const timed = list.filter(e => e.startedAt > 0);
+    const timed = list.filter(e => e.startedAt > 0 && e.createdAt > e.startedAt);
     const hr = ms => new Date(ms).getHours();
+    const byDay = {}, weekDays = {};
+    list.forEach(e => { byDay[e.date] = (byDay[e.date] || 0) + e.hours; });
+    Object.keys(byDay).forEach(d => { const k = ymd(startOfWeek(parseYmd(d))); weekDays[k] = (weekDays[k] || 0) + 1; });
+    let received = 0;
+    Object.entries(S.reactions).forEach(([by, docs]) => {
+      if (by !== uid) Object.values(docs || {}).forEach(r => { if (r && r.target === uid) received++; });
+    });
+    const med = WW.medals[uid] || [0, 0, 0];
     return {
+      sessions: list.length,
+      timed: timed.length,
       total: list.reduce((a, e) => a + e.hours, 0),
       longest: list.reduce((a, e) => Math.max(a, e.hours), 0),
+      bestDay: Math.max(0, ...Object.values(byDay)),
+      bestWeekDays: Math.max(0, ...Object.values(weekDays)),
+      subjects: new Set(list.map(e => (e.subject || '').trim().toLowerCase()).filter(Boolean)).size,
+      given: Object.keys(S.reactions[uid] || {}).length,
+      received,
       owl: timed.some(e => { const h = hr(e.createdAt); return h >= 23 || h < 4; }),
       bird: timed.some(e => { const h = hr(e.startedAt); return h >= 4 && h < 7; }),
+      monk: timed.some(e => e.hours >= 12),
+      pixel: timed.some(e => { const d = e.createdAt - e.startedAt; return d >= 3600000 && d < 3601000; }),
       streak: streakOf(uid),
-      wins: WW.wins[uid] || 0
+      wins: med[0],
+      medalsTotal: med[0] + med[1] + med[2],
+      goldRun: (WW.goldRun && WW.goldRun[uid]) || 0,
+      perfectMonth: !!(WW.perfect && WW.perfect.has(uid))
     };
   }
   function computeDerived() {
     WW = weekWins();
     SUM = {};
     PS.forEach(p => { if (!p.empty) SUM[p.uid] = summaryOf(p.uid); });
+  }
+
+  /* --- Achievements screen (anyone's) --- */
+  const achModal = $('#achModal');
+  let achFor = null;
+  achModal.addEventListener('click', e => { if (e.target === achModal || e.target.closest('[data-close]')) achModal.close(); });
+  function openAch(slot) { achFor = slot; renderAch(); achModal.showModal(); }
+  function achCard(a, s) {
+    const [c, t] = a.prog(s), done = c >= t;
+    if (a.tier === 'secret' && !done) {
+      return `<div class="ach-card secret locked t-secret"><span class="ach-medal">?</span>
+        <div class="ach-info"><b>???</b><small>Secret achievement. Only the most dedicated will find it.</small></div></div>`;
+    }
+    const pct = Math.max(0, Math.min(100, t ? c / t * 100 : 0));
+    const label = done ? 'Unlocked ✓'
+      : t === 1 && !a.unit ? 'Not yet'
+      : a.unit === 'h' ? `${fmtH(Math.min(c, t))} / ${t}h` : `${fmtPts(Math.min(c, t))} / ${fmtPts(t)}`;
+    return `<div class="ach-card t-${a.tier} ${done ? 'unlocked' : 'locked'}${a.tier === 'secret' ? ' secret' : ''}">
+      <span class="ach-medal">${a.ico}</span>
+      <div class="ach-info"><b>${a.name}</b><small>${a.desc}</small>
+        ${done ? '' : `<div class="ach-prog"><i style="width:${pct.toFixed(1)}%"></i></div>`}<em>${label}</em></div></div>`;
+  }
+  function renderAch() {
+    const p = PS.find(x => x.slot === achFor);
+    if (!p || p.empty) { achModal.close(); return; }
+    const s = SUM[p.uid];
+    if (!s) return;
+    const got = achOf(s);
+    $('#achTitle').textContent = p.uid === S.me ? 'Your achievements' : `${p.name}'s achievements`;
+    const tiers = ['bronze', 'silver', 'gold', 'platinum', 'secret'].map(t => {
+      const items = ACH.filter(a => a.tier === t), n = items.filter(a => achDone(a, s)).length;
+      const note = t === 'secret' ? `${n} of ${items.length} found` : `${n} / ${items.length}`;
+      return `<section class="ach-tier t-${t}"><h4>${TIERS[t].label}${t === 'secret' ? ' 🔒' : ''}<small>${note}</small></h4>
+        <div class="ach-grid">${items.map(a => achCard(a, s)).join('')}</div></section>`;
+    }).join('');
+    const html = `<div class="ach-head" style="${cvars(p.color)}"><span class="avatar">${avHTML(p)}</span>
+        <div class="ach-total"><b>${got.length}</b><span>of ${ACH.length} unlocked</span>
+        <div class="bar"><div class="bar-fill" style="width:${(got.length / ACH.length * 100).toFixed(1)}%"></div></div></div></div>${tiers}`;
+    const body = $('#achBody');
+    if (body._h !== html) { body.innerHTML = html; body._h = html; }
+  }
+
+  /* --- Unlocks: my newly earned achievements are recorded (so they show in everyone's feed)
+         and celebrated with a pop-up. Achievements earned before this feature are recorded quietly. --- */
+  let achReady = false;
+  const unlockQ = [];
+  const unlockModal = $('#unlockModal');
+  unlockModal.addEventListener('click', e => { if (e.target === unlockModal || e.target.closest('[data-close]')) unlockModal.close(); });
+  unlockModal.addEventListener('close', () => setTimeout(nextUnlock, 350));
+  function nextUnlock() {
+    if (unlockModal.open) return;
+    const a = unlockQ.shift();
+    if (!a) return;
+    unlockModal.className = `modal unlock t-${a.tier}`;
+    $('#unlockMedal').textContent = a.ico;
+    $('#unlockKicker').textContent = a.tier === 'secret' ? '✨ Secret achievement unlocked ✨' : 'Achievement unlocked';
+    $('#unlockName').textContent = a.name;
+    $('#unlockDesc').textContent = a.desc;
+    $('#unlockTier').textContent = TIERS[a.tier].label;
+    unlockModal.showModal();
+    if (TIERS[a.tier].rank >= 3) setTimeout(confetti, 250);
+  }
+  function checkMyAchievements() {
+    const me = mine();
+    if (!me || !achReady || !S.achLoaded[me.uid] || !SUM[me.uid]) return;
+    const stored = S.achs[me.uid] || {};
+    const fresh = achOf(SUM[me.uid]).filter(a => !stored[a.id]);
+    const firstRun = !stored.init;
+    if (!fresh.length && !firstRun) return;
+    const at = Date.now(), b = FB.writeBatch(S.db), local = { ...stored };
+    if (firstRun) { b.set(FB.doc(S.db, 'profiles', me.uid, 'achievements', 'init'), { at, seeded: true }); local.init = { at, seeded: true }; }
+    fresh.forEach(a => {
+      const d = firstRun ? { at, seeded: true } : { at };
+      b.set(FB.doc(S.db, 'profiles', me.uid, 'achievements', a.id), d);
+      local[a.id] = d;
+    });
+    S.achs[me.uid] = local;           // mark now so a pop-up never shows twice
+    b.commit().catch(() => {});
+    if (!firstRun) {
+      fresh.sort((x, y) => TIERS[x.tier].rank - TIERS[y.tier].rank).forEach(a => unlockQ.push(a));
+      nextUnlock();
+    }
+  }
+
+  /* --- Chat --- */
+  let chatMsgs = [], chatTab = 'feed', chatUnsub = null, lastChatSeen = 0, chatPrimed = false;
+  const seenMsgs = new Set();
+  try { lastChatSeen = Number(localStorage.getItem('studyLeague.chatSeen')) || 0; } catch (e) { /* optional */ }
+  function setFeedTab(t) {
+    chatTab = t;
+    document.querySelectorAll('#feedTabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
+    $('#feed').hidden = t !== 'feed';
+    $('#chatPane').hidden = t !== 'chat';
+    if (t === 'chat') { markChatSeen(); renderChat(true); }
+  }
+  function markChatSeen() {
+    const last = chatMsgs.length ? chatMsgs[chatMsgs.length - 1].at : 0;
+    lastChatSeen = Math.max(lastChatSeen, last);
+    try { localStorage.setItem('studyLeague.chatSeen', String(lastChatSeen)); } catch (e) { /* optional */ }
+    $('#chatUnread').hidden = true;
+  }
+  $('#feedTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) setFeedTab(b.dataset.tab); });
+  const timeOf = t => new Date(t).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
+  function renderChat(forceBottom) {
+    const list = $('#chatList');
+    const me = mine();
+    $('#chatForm').hidden = !me;
+    $('#chatNote').hidden = !!me || !S.loaded;
+    const msgs = chatMsgs.filter(m => byUid(m.pid));
+    const unread = msgs.filter(m => m.at > lastChatSeen && m.pid !== S.me).length;
+    if (chatTab === 'chat') markChatSeen();
+    else { $('#chatUnread').hidden = !unread; $('#chatUnread').textContent = unread > 9 ? '9+' : unread; }
+    if (!msgs.length) { list.innerHTML = '<p class="feed-empty">No messages yet. Say hi 👋</p>'; list._h = ''; return; }
+    let lastDay = '';
+    const html = msgs.map(m => {
+      const p = byUid(m.pid), own = m.pid === S.me, day = fmt(new Date(m.at), { weekday: 'short', month: 'short', day: 'numeric' });
+      const sep = day !== lastDay ? `<p class="chat-day">${day}</p>` : '';
+      lastDay = day;
+      const isNew = chatPrimed && !seenMsgs.has(m.id);
+      seenMsgs.add(m.id);
+      return `${sep}<div class="msg${own ? ' mine' : ''}${isNew ? ' new' : ''}" style="${cvars(p.color)}">
+        <span class="avatar sm">${avHTML(p)}</span>
+        <div class="bubble"><div class="who">${esc(p.name)}<time>${timeOf(m.at)}</time></div><p>${esc(m.text)}</p></div>
+        ${own ? `<button type="button" class="msg-del" data-del-msg="${esc(m.id)}" aria-label="Delete message" title="Delete">✕</button>` : ''}</div>`;
+    }).join('');
+    chatPrimed = true;
+    const nearBottom = list.scrollHeight - list.scrollTop - list.clientHeight < 80;
+    if (list._h !== html) { list.innerHTML = html; list._h = html; }
+    if (forceBottom || nearBottom) list.scrollTop = list.scrollHeight;
+  }
+  let lastSend = 0;
+  $('#chatForm').addEventListener('submit', async e => {
+    e.preventDefault();
+    const inp = $('#chatInput'), text = inp.value.trim().slice(0, 300);
+    if (!text || !S.me) return;
+    if (Date.now() - lastSend < 800) return;
+    lastSend = Date.now();
+    inp.value = '';
+    try { await FB.setDoc(FB.doc(S.db, 'chat', newId()), { pid: S.me, text, at: Date.now() }); renderChat(true); }
+    catch (err) { inp.value = text; writeErr(err); }
+  });
+  $('#chatList').addEventListener('click', async e => {
+    const b = e.target.closest('[data-del-msg]');
+    if (!b) return;
+    try { await FB.deleteDoc(FB.doc(S.db, 'chat', b.dataset.delMsg)); } catch (err) { writeErr(err); }
+  });
+  function listenChat() {
+    chatUnsub = FB.onSnapshot(FB.query(FB.collection(S.db, 'chat'), FB.orderBy('at', 'desc'), FB.limit(80)), snap => {
+      chatMsgs = snap.docs.map(d => {
+        const v = d.data();
+        return { id: d.id, pid: String(v.pid || ''), text: String(v.text || '').slice(0, 300), at: Number(v.at) || 0 };
+      }).filter(m => m.text).reverse();
+      renderChat();
+    }, () => {});
   }
 
 
@@ -2230,6 +2588,10 @@ const HEARTBEAT_MS = 60000;
       if (nl && nl !== leader) { if (e.createdAt >= since) ev.push({ k: 'w' + nl + e.createdAt, t: e.createdAt + 1, type: 'lead', uid: nl }); leader = nl; }
     });
     WW.last.forEach(uid => ev.push({ k: 'c' + uid + ws, t: currentStart('week').getTime(), type: 'champ', uid }));
+    Object.entries(S.achs).forEach(([uid, docs]) => Object.entries(docs || {}).forEach(([id, d]) => {
+      const a = ACH_BY_ID[id];
+      if (a && d && !d.seeded && Number(d.at) >= since) ev.push({ k: 'a' + uid + id, t: Number(d.at), type: 'ach', uid, a });
+    }));
     return ev.filter(x => byUid(x.uid)).sort((a, b) => b.t - a.t).slice(0, 25);
   }
   const reactKey = (uid, sid) => `${uid}__${sid}`;
@@ -2270,6 +2632,11 @@ const HEARTBEAT_MS = 60000;
         meta = `Studying for <span data-since="${p.clockedInAt}">${fmtShort(Date.now() - p.clockedInAt)}</span>`;
       } else if (x.type === 'lead') text = `${nm} took 1st place this week 👑`;
       else if (x.type === 'champ') text = `${nm} won last week 🏆`;
+      else if (x.type === 'ach') {
+        const a = x.a, chip = `<span class="feed-ach t-${a.tier}" title="${a.desc}">${a.ico} ${a.name}</span>`;
+        text = a.tier === 'secret' ? `${nm} unlocked a <b>secret</b> achievement ${chip}` : `${nm} unlocked ${chip}`;
+        meta += ` · ${TIERS[a.tier].label}`;
+      }
       const isNew = feedPrimed && !seenFeed.has(x.k);
       seenFeed.add(x.k);
       return `<div class="feed-item${isNew ? ' new' : ''}" style="${cvars(p.color)}"><span class="avatar sm${p.clockedInAt && x.type === 'in' ? ' ringing' : ''}">${avHTML(p)}</span>
@@ -2381,7 +2748,8 @@ const HEARTBEAT_MS = 60000;
 
   /* Test hook for local development only (never present on the live site). */
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    window.__studyLeague = { S, confetti, renderRecap, shrinkPhoto: f => shrinkPhoto(f), recapModal, ranked, periodStats, renderAll, currentStart, addDays, lbRows, prevRanks };
+    window.__studyLeague = { S, confetti, renderRecap, shrinkPhoto: f => shrinkPhoto(f),
+      testUnlock: id => { unlockQ.push(ACH_BY_ID[id]); nextUnlock(); }, openAch: s => openAch(s), SUM: () => SUM, recapModal, ranked, periodStats, renderAll, currentStart, addDays, lbRows, prevRanks };
   }
 
   /* --- "You" card: my rank, points, streak and the gap to the next place --- */
@@ -2606,14 +2974,31 @@ const HEARTBEAT_MS = 60000;
     Object.keys(reactSubs).forEach(uid => {
       if (!S.members[uid]) { reactSubs[uid](); delete reactSubs[uid]; delete S.reactions[uid]; }
     });
+    /* Recorded achievement unlocks (for the live feed and unlock pop-ups). */
+    Object.keys(S.members).forEach(uid => {
+      if (achSubs[uid]) return;
+      achSubs[uid] = FB.onSnapshot(FB.collection(S.db, 'profiles', uid, 'achievements'), snap => {
+        const m = {};
+        snap.docs.forEach(d => { m[d.id] = d.data(); });
+        if (!snap.metadata.hasPendingWrites) S.achs[uid] = { ...(S.achs[uid] || {}), ...m };
+        S.achLoaded[uid] = !snap.metadata.fromCache || S.achLoaded[uid] === true;
+        renderAll();
+      }, () => {});
+    });
+    Object.keys(achSubs).forEach(uid => {
+      if (!S.members[uid]) { achSubs[uid](); delete achSubs[uid]; delete S.achs[uid]; delete S.achLoaded[uid]; }
+    });
   }
+  const achSubs = {};
   const reactSubs = {};
   function stopAll() {
     if (membersUnsub) { membersUnsub(); membersUnsub = null; }
     Object.keys(sessionSubs).forEach(uid => { sessionSubs[uid](); delete sessionSubs[uid]; });
     Object.keys(reactSubs).forEach(uid => { reactSubs[uid](); delete reactSubs[uid]; });
     if (photosUnsub) { photosUnsub(); photosUnsub = null; }
-    S.members = {}; S.sessions = {}; S.reactions = {}; S.photos = {}; S.loaded = false;
+    if (chatUnsub) { chatUnsub(); chatUnsub = null; }
+    Object.keys(achSubs).forEach(uid => { achSubs[uid](); delete achSubs[uid]; });
+    S.members = {}; S.sessions = {}; S.reactions = {}; S.photos = {}; S.achs = {}; S.achLoaded = {}; S.loaded = false;
   }
   let photosUnsub = null;
 
@@ -2650,6 +3035,7 @@ const HEARTBEAT_MS = 60000;
   let membersUnsub = null;
   function listen() {
     const loadTimer = setTimeout(() => { if (!S.loaded) notice("Can't reach the league data yet. It will appear as soon as the connection is back."); }, 10000);
+    listenChat();
     photosUnsub = FB.onSnapshot(FB.collection(S.db, 'photos'), snap => {
       const m = {};
       snap.docs.forEach(d => { m[d.id] = d.data(); });
@@ -2663,7 +3049,11 @@ const HEARTBEAT_MS = 60000;
       const firstLoad = !S.loaded;
       S.members = m;
       clearTimeout(loadTimer);
-      if (firstLoad) { S.loaded = true; notice(''); setTimeout(maybeRecap, 3000); }
+      if (firstLoad) {
+        S.loaded = true; notice('');
+        setTimeout(maybeRecap, 3000);
+        setTimeout(() => { achReady = true; renderAll(); }, 4000);   // let every session load before judging unlocks
+      }
       findMyProfile();
       syncSessionSubs();
       renderAll();
@@ -2678,6 +3068,7 @@ const HEARTBEAT_MS = 60000;
   }
 
   function start() {
+    $('#version').textContent = `Study League · version ${APP_VERSION}`;
     buildCards();
     renderAll();
     if (String(firebaseConfig.apiKey).startsWith('PASTE_')) {
