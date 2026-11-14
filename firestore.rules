@@ -80,6 +80,16 @@ service cloud.firestore {
       }
     }
 
+    // Profile pictures: one small image per spot, changeable only by that player.
+    match /photos/{pid} {
+      allow read: if signedIn();
+      allow create, update: if validSlot(pid) && linked(pid)
+        && request.resource.data.data is string
+        && request.resource.data.data.size() < 200000
+        && request.resource.data.data.matches('data:image/(jpeg|png|webp);base64,.+');
+      allow delete: if linked(pid);
+    }
+
     // Everything else is closed.
     match /{document=**} {
       allow read, write: if false;
