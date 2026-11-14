@@ -676,7 +676,9 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
 .avatar.xl { width: 96px; height: 96px; border-radius: 28px; font-size: 48px; --r: 28px; }
 .av-pick-top { display: flex; align-items: center; gap: 18px; margin-bottom: 6px; }
 .av-pick-actions { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; min-width: 0; }
-.upload-btn { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.upload-btn { cursor: pointer; display: inline-flex; align-items: center; gap: 6px; position: relative; overflow: hidden; }
+/* Real (not display:none) file input stretched over the button: works on iPhone Safari too */
+.file-input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 0; }
 .emoji-grid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 6px; }
 .emoji-grid button {
   aspect-ratio: 1; border-radius: 12px; font-size: 1.35rem; background: rgba(255, 255, 255, .04); border: 1px solid var(--line);
@@ -696,7 +698,9 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
   background: linear-gradient(110deg, var(--cs, rgba(200, 255, 61, .12)) 0%, rgba(22, 24, 28, .85) 45%), var(--surface);
   box-shadow: var(--shadow);
 }
-.you-av { width: 64px; height: 64px; border-radius: 20px; font-size: 32px; }
+.you-av { width: 64px; height: 64px; border-radius: 20px; font-size: 32px; cursor: pointer; transition: transform .25s var(--spring); }
+.you-av:hover { transform: scale(1.05); }
+.you-cam { position: absolute; right: -6px; bottom: -6px; width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center; font-size: 12px; background: var(--lime); border: 2px solid #111316; }
 .you-eyebrow { font-size: .66rem; text-transform: uppercase; letter-spacing: .14em; color: var(--muted); font-weight: 700; }
 .you-rank { font-family: var(--display); line-height: 1.05; margin: 2px 0 6px; }
 .you-rank b { font-size: 2rem; font-weight: 700; color: var(--c); }
@@ -1082,8 +1086,9 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
     <div class="av-pick-top">
       <span class="avatar xl" id="avPreview"></span>
       <div class="av-pick-actions">
-        <label class="primary-btn upload-btn" for="photoInput">📷 Upload photo</label>
-        <input type="file" id="photoInput" accept="image/*" hidden>
+        <label class="primary-btn upload-btn">📷 Upload photo
+          <input type="file" id="photoInput" accept="image/*" class="file-input">
+        </label>
         <button type="button" class="ghost-btn danger" id="removePhoto" hidden>Remove photo</button>
         <p class="hint" id="photoStatus">Square crop, shrunk automatically.</p>
       </div>
@@ -2311,7 +2316,7 @@ const HEARTBEAT_MS = 60000;
 
   /* Test hook for local development only (never present on the live site). */
   if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-    window.__studyLeague = { S, confetti, renderRecap, recapModal, ranked, periodStats, renderAll, currentStart, addDays, lbRows, prevRanks };
+    window.__studyLeague = { S, confetti, renderRecap, shrinkPhoto: f => shrinkPhoto(f), recapModal, ranked, periodStats, renderAll, currentStart, addDays, lbRows, prevRanks };
   }
 
   /* --- "You" card: my rank, points, streak and the gap to the next place --- */
@@ -2341,7 +2346,7 @@ const HEARTBEAT_MS = 60000;
       gap = `<b>${fmtPts(above.points - meS.points)} pts</b> behind ${esc(above.p.name)} · about <b>${fmtH(minutesToGain(need) / 60)}</b> of study to pass`;
     }
     const html = `
-      <span class="avatar you-av${me.clockedInAt ? ' ringing' : ''}" style="${cvars(me.color)};--r:20px">${avHTML(me)}</span>
+      <button type="button" class="avatar you-av${me.clockedInAt ? ' ringing' : ''}" data-photo style="${cvars(me.color)};--r:20px" title="Change profile picture" aria-label="Change profile picture">${avHTML(me)}<span class="you-cam" aria-hidden="true">📷</span></button>
       <div class="you-main">
         <p class="you-eyebrow">You this week</p>
         <p class="you-rank"><b>${RANK_TEXT[meS.rank - 1] || meS.rank + 'th'}</b><span> of ${r.length}</span></p>
@@ -2364,7 +2369,10 @@ const HEARTBEAT_MS = 60000;
     catch (e) { toast(`Invite link: ${url}`); }
   }
   $('#inviteBtn').addEventListener('click', copyInvite);
-  $('#youCard').addEventListener('click', e => { if (e.target.closest('b') && /invite/i.test(e.target.textContent)) copyInvite(); });
+  $('#youCard').addEventListener('click', e => {
+    if (e.target.closest('[data-photo]')) { openAvatarPicker(); return; }
+    if (e.target.closest('b') && /invite/i.test(e.target.textContent)) copyInvite();
+  });
 
   /* --- Floating clock button (phones) --- */
   $('#fab').addEventListener('click', () => $('#clockBtn').click());
@@ -2394,41 +2402,59 @@ const HEARTBEAT_MS = 60000;
     renderAvatarPicker();
     avatarModal.showModal();
   }
-  /* Center-crop to a square, shrink to 192px and compress to a small JPEG. */
-  function shrinkPhoto(file) {
+  /* Decode any image the browser can read (createImageBitmap first, <img> as fallback). */
+  async function decodeImage(file) {
+    if (window.createImageBitmap) {
+      try { const bmp = await createImageBitmap(file); return { src: bmp, w: bmp.width, h: bmp.height }; } catch (e) { /* try <img> */ }
+    }
     return new Promise((resolve, reject) => {
       const url = URL.createObjectURL(file), img = new Image();
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        const side = Math.min(img.naturalWidth, img.naturalHeight);
-        if (!side) { reject(new Error('empty')); return; }
-        const c = document.createElement('canvas'); c.width = c.height = 192;
-        const ctx = c.getContext('2d');
-        ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, 192, 192);
-        let q = .85, data = c.toDataURL('image/jpeg', q);
-        while (data.length > 60000 && q > .4) { q -= .1; data = c.toDataURL('image/jpeg', q); }
-        resolve(data);
-      };
-      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('unreadable')); };
+      img.onload = () => { URL.revokeObjectURL(url); resolve({ src: img, w: img.naturalWidth, h: img.naturalHeight }); };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(Object.assign(new Error('unreadable'), { why: 'format' })); };
       img.src = url;
     });
+  }
+  /* Center-crop to a square, shrink to 192px and compress to a small JPEG. */
+  async function shrinkPhoto(file) {
+    const { src, w, h } = await decodeImage(file);
+    const side = Math.min(w, h);
+    if (!side) throw Object.assign(new Error('empty'), { why: 'format' });
+    const c = document.createElement('canvas'); c.width = c.height = 192;
+    const ctx = c.getContext('2d');
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(src, (w - side) / 2, (h - side) / 2, side, side, 0, 0, 192, 192);
+    if (src.close) src.close();
+    let q = .85, data = c.toDataURL('image/jpeg', q);
+    while (data.length > 60000 && q > .4) { q -= .1; data = c.toDataURL('image/jpeg', q); }
+    return data;
   }
   $('#photoInput').addEventListener('change', async e => {
     const file = e.target.files && e.target.files[0];
     e.target.value = '';
-    if (!file || !S.me) return;
-    if (!/^image\//.test(file.type)) { toast('Pick an image file (JPG, PNG, HEIC…).'); return; }
-    $('#photoStatus').textContent = 'Uploading…';
+    if (!file) return;
+    if (!S.me) { toast('Log in to your profile first (tap "That\'s me" and enter your PIN).'); return; }
+    const status = $('#photoStatus');
+    status.textContent = 'Uploading…';
+    let data;
+    try { data = await shrinkPhoto(file); }
+    catch (err) {
+      const heic = /hei[cf]/i.test(file.type) || /\.hei[cf]$/i.test(file.name);
+      status.textContent = heic
+        ? 'This browser can\'t read iPhone HEIC photos. Take a screenshot of the photo and upload that, or try from Safari.'
+        : 'That file couldn\'t be read as an image. Try a different photo (JPG or PNG work best).';
+      toast(status.textContent);
+      return;
+    }
     try {
-      const data = await shrinkPhoto(file);
       await FB.setDoc(FB.doc(S.db, 'photos', S.me), { data, at: Date.now() });
-      $('#photoStatus').textContent = 'Saved!';
+      status.textContent = 'Saved!';
       toast('📷 Profile picture updated');
       avatarModal.close();
     } catch (err) {
-      $('#photoStatus').textContent = 'That photo couldn\'t be used. Try a different one.';
-      if (err && err.code) writeErr(err);
+      status.textContent = err && err.code === 'permission-denied'
+        ? 'The league didn\'t accept it: this device isn\'t linked to your profile. Log out and back in with your PIN, then try again.'
+        : 'Upload failed. Check your connection and try again.';
+      toast(status.textContent);
     }
   });
   $('#removePhoto').addEventListener('click', async () => {
