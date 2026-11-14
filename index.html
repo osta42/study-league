@@ -717,6 +717,22 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
   padding: 10px 12px 10px 16px; border-radius: var(--radius); border: 1px dashed var(--line-2); color: var(--muted); font-size: .84rem;
 }
 
+/* Weekly medals on profiles */
+.pfoot { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+.pfoot .badges { margin-top: 0; justify-content: flex-end; }
+.medals { display: flex; gap: 6px; }
+.medal {
+  display: inline-flex; align-items: center; gap: 5px; height: 28px; padding: 0 9px 0 6px; border-radius: 9px;
+  font-variant-numeric: tabular-nums; border: 1px solid; transition: transform .25s var(--spring);
+}
+.medal:hover { transform: translateY(-2px); }
+.medal i { font-style: normal; font-size: 15px; line-height: 1; }
+.medal b { font-family: var(--display); font-size: .9rem; font-weight: 700; }
+.medal.gold { border-color: rgba(230, 192, 107, .45); background: linear-gradient(160deg, rgba(230, 192, 107, .2), rgba(230, 192, 107, .05)); color: #f4dfa8; }
+.medal.silver { border-color: rgba(195, 203, 217, .4); background: linear-gradient(160deg, rgba(195, 203, 217, .16), rgba(195, 203, 217, .04)); color: #e3e8f0; }
+.medal.bronze { border-color: rgba(211, 148, 103, .42); background: linear-gradient(160deg, rgba(211, 148, 103, .18), rgba(211, 148, 103, .04)); color: #f0c3a0; }
+.medal.none { opacity: .35; filter: grayscale(.6); }
+
 /* Badges: earned + "3/7" toggle */
 .badge-more {
   height: 28px; padding: 0 10px; border-radius: 9px; font-size: .72rem; font-weight: 700; color: var(--muted);
@@ -1469,7 +1485,10 @@ const HEARTBEAT_MS = 60000;
           <div class="pstat"><span>This month</span><b data-k="mh"></b><i data-k="mp"></i></div>
           <div class="pstat"><span>This year</span><b data-k="yh"></b><i data-k="yp"></i></div>
         </div>
-        <div class="badges"></div>`;
+        <div class="pfoot">
+          <div class="medals" aria-label="Weekly medals"></div>
+          <div class="badges"></div>
+        </div>`;
       const av = el.querySelector('.avatar'), inp = el.querySelector('.name-input');
       av.addEventListener('click', () => {
         const me = mine();
@@ -1516,7 +1535,10 @@ const HEARTBEAT_MS = 60000;
         const st = sum.streak;
         if (st.cur > 0) extras += `<span class="mini-chip fire${st.studiedToday ? '' : ' cold'}" title="${st.cur}-day streak${st.studiedToday ? '' : ' · study today to keep it going'} · best ${st.best}">🔥 ${st.cur}</span>`;
         if (WW.last.includes(p.uid)) extras += '<span class="mini-chip champ" title="Won last week">👑 Champ</span>';
-        if (sum.wins > 0) extras += `<span class="mini-chip" title="Weeks won">🏆 ×${sum.wins}</span>`;      }
+      }
+      const medEl = el.querySelector('.medals');
+      medEl.hidden = !sum;
+      if (sum) { const mh = medalsHTML(p.uid); if (medEl._h !== mh) { medEl.innerHTML = mh; medEl._h = mh; } }
       el.querySelector('.chips').innerHTML = p.empty ? '<span class="hint">Waiting for a player to join</span>'
         : statusChip(p) + extras + (!S.me && S.authUid ? `<button type="button" class="chip-btn claim-btn" data-claim="${p.uid}">That's me</button>` : '');
       el.querySelector('.profile-grid').hidden = p.empty;
@@ -1981,7 +2003,7 @@ const HEARTBEAT_MS = 60000;
      except reactions and startedAt on timed sessions)
      ===================================================================== */
   const REACTIONS = ['🔥', '👏', '💀'];
-  let WW = { wins: {}, last: [] };   // week wins + last week's champion(s)
+  let WW = { wins: {}, medals: {}, last: [] };   // weekly medals, week wins, last week's champion(s)
   let SUM = {};                      // per-player summary for badges / streaks
 
   /* --- Streaks: consecutive days with at least one session --- */
@@ -2001,18 +2023,29 @@ const HEARTBEAT_MS = 60000;
     return { cur, best, studiedToday };
   }
 
-  /* --- Weeks won (complete weeks only) and last week's champion --- */
+  /* --- Weekly medals (complete weeks only): 1st = gold, 2nd = silver, 3rd = bronze.
+         Ties share the medal. Weeks won = gold medals. Also last week's champion. --- */
   function weekWins() {
     const cur = ymd(currentStart('week')), lastKey = ymd(addDays(currentStart('week'), -7));
     const weeks = new Set();
     ENTRIES.forEach(e => { const k = ymd(startOfWeek(parseYmd(e.date))); if (k < cur) weeks.add(k); });
-    const wins = {}; let last = [];
+    const wins = {}, medals = {}; let last = [];
     weeks.forEach(k => {
-      const top = ranked(periodStats('week', parseYmd(k))).filter(x => x.rank === 1 && x.points > 0 && !x.p.empty);
-      top.forEach(x => { wins[x.p.uid] = (wins[x.p.uid] || 0) + 1; });
-      if (k === lastKey) last = top.map(x => x.p.uid);
+      const r = ranked(periodStats('week', parseYmd(k))).filter(x => x.points > 0 && !x.p.empty && x.rank <= 3);
+      r.forEach(x => {
+        const m = medals[x.p.uid] || (medals[x.p.uid] = [0, 0, 0]);
+        m[x.rank - 1]++;
+        if (x.rank === 1) wins[x.p.uid] = (wins[x.p.uid] || 0) + 1;
+      });
+      if (k === lastKey) last = r.filter(x => x.rank === 1).map(x => x.p.uid);
     });
-    return { wins, last };
+    return { wins, medals, last };
+  }
+  function medalsHTML(uid) {
+    const m = WW.medals[uid] || [0, 0, 0];
+    const kinds = [['gold', '🥇', '1st'], ['silver', '🥈', '2nd'], ['bronze', '🥉', '3rd']];
+    return kinds.map(([cls, ico, place], i) =>
+      `<span class="medal ${cls}${m[i] ? '' : ' none'}" title="${m[i]} week${m[i] === 1 ? '' : 's'} finished ${place}"><i>${ico}</i><b>${m[i]}</b></span>`).join('');
   }
 
   /* --- Badges --- */
