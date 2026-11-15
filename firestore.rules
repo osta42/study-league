@@ -164,7 +164,7 @@ service cloud.firestore {
       allow create, update: if request.resource.data.pid is string && validSlot(request.resource.data.pid)
         && linked(request.resource.data.pid)
         && reactId == request.resource.data.post + '__' + request.resource.data.pid
-        && request.resource.data.emoji in ['🔥', '😂', '💀', '❤️']
+        && request.resource.data.emoji in ['🔥', '😂', '💀', '❤️', '👍', '🧌']
         && request.resource.data.at is int;
       allow delete: if (resource.data.pid is string && linked(resource.data.pid))
         || (exists(/databases/$(database)/documents/posts/$(resource.data.post)) && linked(postOwner(resource.data.post)));

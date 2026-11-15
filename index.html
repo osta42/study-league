@@ -1022,7 +1022,7 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
 }
 /* ===== Posts feed ===== */
 .posts-card .card-head .hint { margin: 0; }
-.composer { max-width: 640px; margin-inline: auto; display: flex; gap: 12px; align-items: flex-start; padding: 12px; border-radius: var(--radius); background: var(--inset); border: 1px solid var(--line); margin-bottom: 16px; }
+.composer { display: flex; gap: 10px; align-items: flex-start; padding: 10px; border-radius: var(--radius); background: var(--inset); border: 1px solid var(--line); margin-bottom: 12px; }
 .composer .avatar { margin-top: 2px; }
 .composer-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 10px; }
 .composer textarea {
@@ -1039,7 +1039,13 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
 .attach-preview { position: relative; align-self: flex-start; max-width: 260px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
 .attach-preview img { display: block; max-width: 260px; max-height: 220px; object-fit: cover; }
 .attach-preview button { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%; background: rgba(0, 0, 0, .7); color: #fff; font-size: .8rem; }
-.posts { display: flex; flex-direction: column; gap: 16px; max-width: 640px; margin: 0 auto; }
+.posts-pane { display: flex; flex-direction: column; }
+.posts-pane[hidden] { display: none; }
+.posts { display: flex; flex-direction: column; gap: 14px; height: 560px; overflow-y: auto; overscroll-behavior: contain; padding: 2px 4px 2px 0; }
+.posts::-webkit-scrollbar { width: 6px; }
+.posts::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .08); border-radius: 6px; }
+.gif-head { grid-column: 1 / -1; margin: 4px 0 0; font-size: .74rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+.feed-tabs button { position: relative; }
 .post { border-radius: var(--radius); background: var(--inset); border: 1px solid var(--line); overflow: hidden; animation: rise .45s var(--ease) both; }
 .post-head { display: flex; align-items: center; gap: 10px; padding: 12px 14px 8px; }
 .post-head .who { flex: 1; min-width: 0; }
@@ -1048,7 +1054,7 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
 .post-del { font-size: .78rem; color: var(--muted); padding: 4px 6px; border-radius: 8px; }
 .post-del:hover { color: #ff8a8a; background: rgba(255, 92, 92, .08); }
 .post-text { padding: 0 14px 10px; white-space: pre-wrap; overflow-wrap: anywhere; line-height: 1.45; }
-.post-media { display: block; width: 100%; max-height: 560px; object-fit: cover; background: #08090b; cursor: zoom-in; }
+.post-media { display: block; width: 100%; max-height: 420px; object-fit: cover; background: #08090b; cursor: zoom-in; }
 .post-media.gif { cursor: default; object-fit: contain; }
 .post-bar { display: flex; align-items: center; gap: 6px; padding: 10px 12px; flex-wrap: wrap; }
 .react-btn { height: 30px; padding: 0 9px; border-radius: 999px; font-size: .85rem; display: inline-flex; align-items: center; gap: 4px; background: rgba(255, 255, 255, .04); border: 1px solid var(--line); color: var(--text-2); transition: transform .2s var(--spring), border-color .2s; font-variant-numeric: tabular-nums; }
@@ -1084,6 +1090,7 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
 .img-modal .icon-btn { position: absolute; top: -14px; right: -14px; z-index: 2; background: #16181c; }
 @media (max-width: 640px) {
   .composer { padding: 10px; gap: 8px; }
+  .posts { height: 480px; }
   .composer > .avatar { display: none; }
   .gif-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -1270,12 +1277,30 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
     <div class="card card-anim feed-card">
       <div class="card-head">
         <h2><span class="h-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>Live <span class="live-dot" aria-hidden="true"></span></h2>
-        <div class="seg feed-tabs" id="feedTabs" role="tablist" aria-label="Live feed or chat">
+        <div class="seg feed-tabs" id="feedTabs" role="tablist" aria-label="Activity, posts or chat">
           <button type="button" data-tab="feed" class="active">Activity</button>
+          <button type="button" data-tab="posts">Posts<span class="badge-count" id="postsUnread" hidden></span></button>
           <button type="button" data-tab="chat">Chat<span class="badge-count" id="chatUnread" hidden></span></button>
         </div>
       </div>
       <div class="feed" id="feed"><p class="feed-empty">Loading activity…</p></div>
+      <div class="posts-pane" id="postsPane" hidden>
+        <form class="composer" id="composer" novalidate hidden>
+          <span class="avatar sm" id="composerAv"></span>
+          <div class="composer-main">
+            <textarea id="postText" maxlength="1000" rows="2" placeholder="Share a meme, a pic of your study setup, a flex…"></textarea>
+            <div class="attach-preview" id="attachPreview" hidden></div>
+            <div class="composer-bar">
+              <label class="tool-btn upload-btn" title="Add a photo">📷 Photo<input type="file" id="postPhoto" accept="image/*" class="file-input"></label>
+              <button type="button" class="tool-btn" id="postGifBtn" title="Add a GIF"><b>GIF</b></button>
+              <span class="composer-status hint" id="composerStatus"></span>
+              <button type="submit" class="primary-btn" id="postBtn">Post</button>
+            </div>
+          </div>
+        </form>
+        <p class="hint" id="postsNote" hidden>Join the league (or log in with your PIN) to post.</p>
+        <div class="posts" id="posts"><p class="feed-empty">Loading posts…</p></div>
+      </div>
       <div class="chat" id="chatPane" hidden>
         <div class="chat-list" id="chatList"><p class="feed-empty">No messages yet. Say hi 👋</p></div>
         <form class="chat-form" id="chatForm" novalidate>
@@ -1286,28 +1311,6 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
       </div>
     </div>
     </div>
-  </section>
-
-  <section class="card posts-card card-anim" id="postsCard">
-    <div class="card-head">
-      <h2><span class="h-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="4"/><circle cx="8.5" cy="9" r="1.8"/><path d="M21 15.5l-5-5L5 21"/></svg></span>Posts</h2>
-      <span class="hint" id="postsCount"></span>
-    </div>
-    <form class="composer" id="composer" novalidate hidden>
-      <span class="avatar sm" id="composerAv"></span>
-      <div class="composer-main">
-        <textarea id="postText" maxlength="1000" rows="2" placeholder="Share a meme, a pic of your study setup, a flex…"></textarea>
-        <div class="attach-preview" id="attachPreview" hidden></div>
-        <div class="composer-bar">
-          <label class="tool-btn upload-btn" title="Add a photo">📷 Photo<input type="file" id="postPhoto" accept="image/*" class="file-input"></label>
-          <button type="button" class="tool-btn" id="postGifBtn" title="Add a GIF"><b>GIF</b></button>
-          <span class="composer-status hint" id="composerStatus"></span>
-          <button type="submit" class="primary-btn" id="postBtn">Post</button>
-        </div>
-      </div>
-    </form>
-    <p class="hint" id="postsNote" hidden>Join the league (or log in with your PIN) to post.</p>
-    <div class="posts" id="posts"><p class="feed-empty">Loading posts…</p></div>
   </section>
 
   <section class="card calendar-card card-anim">
@@ -1600,7 +1603,7 @@ if (typeof HTMLDialogElement !== 'function' || !HTMLDialogElement.prototype.show
 }
 
 const FB = { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, collection, doc, onSnapshot, getDoc, getDocs, setDoc, updateDoc, deleteDoc, writeBatch, query, orderBy, limit };
-const APP_VERSION = '2.1 (posts)';   // shown at the bottom of the page; bump on each update
+const APP_VERSION = '2.2 (tabs)';   // shown at the bottom of the page; bump on each update
 const ONLINE_WINDOW_MS = 150000;   // seen in the last 2.5 minutes = online
 const HEARTBEAT_MS = 60000;
 
@@ -2774,7 +2777,10 @@ const HEARTBEAT_MS = 60000;
     document.querySelectorAll('#feedTabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
     $('#feed').hidden = t !== 'feed';
     $('#chatPane').hidden = t !== 'chat';
+    $('#postsPane').hidden = t !== 'posts';
     if (t === 'chat') { markChatSeen(); renderChat(true); }
+    if (t === 'posts') { markPostsSeen(); renderPosts(); }
+    try { localStorage.setItem('studyLeague.feedTab', t); } catch (e) { /* optional */ }
   }
   function markChatSeen() {
     const last = chatMsgs.length ? chatMsgs[chatMsgs.length - 1].at : 0;
@@ -2783,6 +2789,7 @@ const HEARTBEAT_MS = 60000;
     $('#chatUnread').hidden = true;
   }
   $('#feedTabs').addEventListener('click', e => { const b = e.target.closest('[data-tab]'); if (b) setFeedTab(b.dataset.tab); });
+  setTimeout(() => { try { const s = localStorage.getItem('studyLeague.feedTab'); if (s === 'posts' || s === 'chat') setFeedTab(s); } catch (e) { /* optional */ } }, 0);
   const timeOf = t => new Date(t).toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
   function renderChat(forceBottom) {
     const list = $('#chatList');
@@ -3523,7 +3530,7 @@ const HEARTBEAT_MS = 60000;
   /* ===================== Posts: photos, memes, GIFs, comments, reactions ===================== */
   /* GIPHY API key (client-side key from developers.giphy.com). Empty = GIF search shows a setup note. */
   const GIPHY_KEY = 'RRu9ddjszqLyuQ3o6PskiqevbXZecTbV';
-  const POST_REACTS = ['🔥', '😂', '💀', '❤️'];
+  const POST_REACTS = ['🔥', '😂', '💀', '❤️', '👍', '🧌'];
   const GIF_ID = /^[A-Za-z0-9]{4,40}$/;
   const gifUrl = (id, small) => `https://i.giphy.com/media/${id}/${small ? '200w' : 'giphy'}.webp`;
   let posts = [], postComments = [], postReacts = [], postsUnsub = null, commentsUnsub = null, reactsUnsub = null;
@@ -3577,12 +3584,24 @@ const HEARTBEAT_MS = 60000;
     prev.hidden = !src;
     prev.innerHTML = src ? `<img src="${src}" alt=""><button type="button" data-clear-attach aria-label="Remove attachment">✕</button>` : '';
   }
+  let lastPostsSeen = 0;
+  try { lastPostsSeen = Number(localStorage.getItem('studyLeague.postsSeen')) || 0; } catch (e) { /* optional */ }
+  function markPostsSeen() {
+    lastPostsSeen = Math.max(lastPostsSeen, ...posts.map(x => x.at), 0);
+    try { localStorage.setItem('studyLeague.postsSeen', String(lastPostsSeen)); } catch (e) { /* optional */ }
+    $('#postsUnread').hidden = true;
+  }
   function renderPosts() {
     if (!S.loaded) return;
     renderComposer();
+    if (chatTab === 'posts') markPostsSeen();
+    else {
+      const unread = posts.filter(x => x.at > lastPostsSeen && x.pid !== S.me && byUid(x.pid)).length;
+      $('#postsUnread').hidden = !unread;
+      $('#postsUnread').textContent = unread > 9 ? '9+' : unread;
+    }
     const list = $('#posts');
     const shown = posts.filter(x => byUid(x.pid));
-    $('#postsCount').textContent = shown.length ? `${shown.length} post${shown.length === 1 ? '' : 's'}` : '';
     if (!shown.length) {
       const h = '<p class="feed-empty">No posts yet. Be the first to drop a meme 📸</p>';
       if (list._h !== h) { list.innerHTML = h; list._h = h; }
@@ -3738,10 +3757,21 @@ const HEARTBEAT_MS = 60000;
     loadGifs('');
     setTimeout(() => $('#gifSearch').focus(), 60);
   }
+  const RECENT_KEY = 'studyLeague.recentGifs';
+  function recentGifs() {
+    try { return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]').map(validGifObj).filter(Boolean).slice(0, 18); }
+    catch (e) { return []; }
+  }
+  function rememberGif(g) {
+    try { localStorage.setItem(RECENT_KEY, JSON.stringify([g, ...recentGifs().filter(x => x.id !== g.id)].slice(0, 18))); } catch (e) { /* optional */ }
+  }
+  const gifBtn = g => `<button type="button" data-gif="${g.id}" data-w="${g.w}" data-h="${g.h}" aria-label="GIF"><img src="${gifUrl(g.id, true)}" alt="" loading="lazy"></button>`;
   async function loadGifs(q) {
     const grid = $('#gifGrid'), seq = ++gifSeq;
+    const recent = q ? [] : recentGifs();
+    const recentHTML = recent.length ? `<p class="gif-head">🕘 Recent</p>${recent.map(gifBtn).join('')}<p class="gif-head">🔥 Trending</p>` : '';
     if (!GIPHY_KEY || GIPHY_KEY.startsWith('PASTE_')) { grid.innerHTML = '<p class="feed-empty">GIF search isn\'t set up yet (needs a GIPHY key).</p>'; return; }
-    grid.innerHTML = '<p class="feed-empty">Loading GIFs…</p>';
+    grid.innerHTML = recentHTML + '<p class="feed-empty">Loading GIFs…</p>';
     const url = q
       ? `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_KEY}&q=${encodeURIComponent(q)}&limit=30&rating=pg-13&bundle=messaging_non_clips`
       : `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_KEY}&limit=30&rating=pg-13&bundle=messaging_non_clips`;
@@ -3751,18 +3781,20 @@ const HEARTBEAT_MS = 60000;
       const j = await res.json();
       if (seq !== gifSeq) return;
       const items = (j.data || []).filter(g => GIF_ID.test(g.id) && g.images && g.images.fixed_width);
-      grid.innerHTML = items.length ? items.map(g => {
+      grid.innerHTML = recentHTML + (items.length ? items.map(g => {
         const fw = g.images.fixed_width, o = g.images.original || fw;
         return `<button type="button" data-gif="${g.id}" data-w="${Number(o.width) || 200}" data-h="${Number(o.height) || 200}" aria-label="${esc(g.title || 'GIF')}">
           <img src="${gifUrl(g.id, true)}" alt="" loading="lazy" style="aspect-ratio:${Number(fw.width) || 200}/${Number(fw.height) || 200}"></button>`;
-      }).join('') : '<p class="feed-empty">No GIFs found. Try another search.</p>';
-    } catch (err) { if (seq === gifSeq) grid.innerHTML = '<p class="feed-empty">Couldn\'t load GIFs. Check your connection and try again.</p>'; }
+      }).join('') : '<p class="feed-empty">No GIFs found. Try another search.</p>');
+    } catch (err) { if (seq === gifSeq) grid.innerHTML = recentHTML + '<p class="feed-empty">Couldn\'t load GIFs. Check your connection and try again.</p>'; }
   }
   $('#gifSearch').addEventListener('input', () => { clearTimeout(gifTimer); gifTimer = setTimeout(() => loadGifs($('#gifSearch').value.trim()), 350); });
   $('#gifGrid').addEventListener('click', e => {
     const b = e.target.closest('[data-gif]');
     if (!b || !gifPick) return;
-    gifPick({ id: b.dataset.gif, w: Number(b.dataset.w), h: Number(b.dataset.h) });
+    const g = { id: b.dataset.gif, w: Number(b.dataset.w) || 200, h: Number(b.dataset.h) || 200 };
+    rememberGif(g);
+    gifPick(g);
     gifPick = null;
     gifModal.close();
   });
