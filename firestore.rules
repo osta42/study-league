@@ -115,6 +115,61 @@ service cloud.firestore {
       allow delete: if linked(pid);
     }
 
+    // GIFs are stored as a GIPHY id + size (the app builds the GIPHY URL itself).
+    function validGif(g) {
+      return g is map && g.keys().hasOnly(['id', 'w', 'h'])
+        && g.id is string && g.id.matches('^[A-Za-z0-9]{4,40}$') && g.w is number && g.h is number;
+    }
+    function postOwner(postId) {
+      return get(/databases/$(database)/documents/posts/$(postId)).data.pid;
+    }
+
+    // Posts: text and/or one photo (small JPEG) or GIF. Post only as yourself; delete only your own.
+    match /posts/{postId} {
+      allow read: if signedIn();
+      allow create: if request.resource.data.pid is string && validSlot(request.resource.data.pid)
+        && linked(request.resource.data.pid)
+        && request.resource.data.keys().hasOnly(['pid', 'text', 'img', 'gif', 'at'])
+        && request.resource.data.text is string && request.resource.data.text.size() <= 1000
+        && request.resource.data.at is int
+        && (!('img' in request.resource.data) || (request.resource.data.img is string
+            && request.resource.data.img.size() < 900000
+            && request.resource.data.img[0:23] == 'data:image/jpeg;base64,'))
+        && (!('gif' in request.resource.data) || validGif(request.resource.data.gif))
+        && (request.resource.data.text.size() > 0 || 'img' in request.resource.data || 'gif' in request.resource.data);
+      allow update: if false;
+      allow delete: if resource.data.pid is string && linked(resource.data.pid);
+    }
+
+    // Comments on posts. The comment's author or the post's author can delete it.
+    match /postComments/{commentId} {
+      allow read: if signedIn();
+      allow create: if request.resource.data.pid is string && validSlot(request.resource.data.pid)
+        && linked(request.resource.data.pid)
+        && request.resource.data.keys().hasOnly(['post', 'pid', 'text', 'gif', 'at'])
+        && request.resource.data.post is string
+        && exists(/databases/$(database)/documents/posts/$(request.resource.data.post))
+        && request.resource.data.text is string && request.resource.data.text.size() <= 500
+        && request.resource.data.at is int
+        && (!('gif' in request.resource.data) || validGif(request.resource.data.gif))
+        && (request.resource.data.text.size() > 0 || 'gif' in request.resource.data);
+      allow update: if false;
+      allow delete: if (resource.data.pid is string && linked(resource.data.pid))
+        || (exists(/databases/$(database)/documents/posts/$(resource.data.post)) && linked(postOwner(resource.data.post)));
+    }
+
+    // One reaction per player per post: id is "<postId>__<spot>".
+    match /postReacts/{reactId} {
+      allow read: if signedIn();
+      allow create, update: if request.resource.data.pid is string && validSlot(request.resource.data.pid)
+        && linked(request.resource.data.pid)
+        && reactId == request.resource.data.post + '__' + request.resource.data.pid
+        && request.resource.data.emoji in ['🔥', '😂', '💀', '❤️']
+        && request.resource.data.at is int;
+      allow delete: if (resource.data.pid is string && linked(resource.data.pid))
+        || (exists(/databases/$(database)/documents/posts/$(resource.data.post)) && linked(postOwner(resource.data.post)));
+    }
+
     // League chat: anyone in the league reads; you can only post as yourself and delete your own.
     match /chat/{msgId} {
       allow read: if signedIn();
