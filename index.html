@@ -867,7 +867,7 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
 /* Chat */
 .feed-tabs .badge-count { display: inline-grid; place-items: center; min-width: 17px; height: 17px; padding: 0 5px; margin-left: 6px; border-radius: 99px; background: var(--cyan); color: #1a0a00; font-size: .64rem; font-weight: 800; }
 .chat { display: flex; flex-direction: column; gap: 10px; }
-.chat-list { display: flex; flex-direction: column; gap: 9px; height: 380px; overflow-y: auto; padding: 2px 4px 2px 0; overscroll-behavior: contain; }
+.chat-list { display: flex; flex-direction: column; gap: 9px; height: 380px; overflow-y: auto; padding: 2px 4px 2px 0; }
 .chat-list::-webkit-scrollbar { width: 6px; }
 .chat-list::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .08); border-radius: 6px; }
 .msg { display: flex; gap: 8px; align-items: flex-end; max-width: 88%; }
@@ -939,7 +939,7 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
 }
 @media (max-width: 960px) {
   .middle { grid-template-columns: minmax(0, 1fr); }
-  .side-col .feed-card { order: -1; }           /* phone order: leaderboard → feed → profiles → calendar */
+
   .feed { max-height: 340px; }
 }
 @media (max-width: 640px) {
@@ -1020,6 +1020,21 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
+/* ===== Live (Activity | Posts | Chat): big, full width, each tab scrolls inside ===== */
+.live-wide { --pane-h: clamp(560px, 80vh, 920px); }
+.live-wide .feed { height: var(--pane-h); max-height: none; }
+.live-wide .chat { height: var(--pane-h); }
+.live-wide .chat-list { flex: 1; min-height: 0; height: auto; }
+.live-wide .posts-pane { height: var(--pane-h); }
+.live-wide .posts { flex: 1; min-height: 0; height: auto; align-items: center; }
+.live-wide .posts > *, .live-wide .composer { width: 100%; max-width: 700px; margin-inline: auto; flex-shrink: 0; }
+.live-wide .chat-list > *, .live-wide .chat-form, .live-wide .chat-day { width: 100%; max-width: 900px; margin-inline: auto; }
+.live-wide .feed > * { width: 100%; max-width: 900px; margin-inline: auto; }
+.live-wide .post-media { max-height: min(78vh, 760px); object-fit: contain; }
+@media (max-width: 640px) {
+  .live-wide { --pane-h: clamp(440px, 74vh, 760px); }
+}
+
 /* ===== Posts feed ===== */
 .posts-card .card-head .hint { margin: 0; }
 .composer { display: flex; gap: 10px; align-items: flex-start; padding: 10px; border-radius: var(--radius); background: var(--inset); border: 1px solid var(--line); margin-bottom: 12px; }
@@ -1041,7 +1056,7 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
 .attach-preview button { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; border-radius: 50%; background: rgba(0, 0, 0, .7); color: #fff; font-size: .8rem; }
 .posts-pane { display: flex; flex-direction: column; }
 .posts-pane[hidden] { display: none; }
-.posts { display: flex; flex-direction: column; gap: 14px; height: 560px; overflow-y: auto; overscroll-behavior: contain; padding: 2px 4px 2px 0; }
+.posts { display: flex; flex-direction: column; gap: 14px; height: 560px; overflow-y: auto; padding: 2px 6px 2px 0; }
 .posts::-webkit-scrollbar { width: 6px; }
 .posts::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, .08); border-radius: 6px; }
 .gif-head { grid-column: 1 / -1; margin: 4px 0 0; font-size: .74rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
@@ -1274,42 +1289,43 @@ input[type=number]:focus, input[type=text]:focus { outline: none; border-color: 
       <p class="hint" id="joinNote" hidden style="margin-top:12px"></p>
     </div>
 
-    <div class="card card-anim feed-card">
-      <div class="card-head">
-        <h2><span class="h-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>Live <span class="live-dot" aria-hidden="true"></span></h2>
-        <div class="seg feed-tabs" id="feedTabs" role="tablist" aria-label="Activity, posts or chat">
-          <button type="button" data-tab="feed" class="active">Activity</button>
-          <button type="button" data-tab="posts">Posts<span class="badge-count" id="postsUnread" hidden></span></button>
-          <button type="button" data-tab="chat">Chat<span class="badge-count" id="chatUnread" hidden></span></button>
-        </div>
-      </div>
-      <div class="feed" id="feed"><p class="feed-empty">Loading activity…</p></div>
-      <div class="posts-pane" id="postsPane" hidden>
-        <form class="composer" id="composer" novalidate hidden>
-          <span class="avatar sm" id="composerAv"></span>
-          <div class="composer-main">
-            <textarea id="postText" maxlength="1000" rows="2" placeholder="Share a meme, a pic of your study setup, a flex…"></textarea>
-            <div class="attach-preview" id="attachPreview" hidden></div>
-            <div class="composer-bar">
-              <label class="tool-btn upload-btn" title="Add a photo">📷 Photo<input type="file" id="postPhoto" accept="image/*" class="file-input"></label>
-              <button type="button" class="tool-btn" id="postGifBtn" title="Add a GIF"><b>GIF</b></button>
-              <span class="composer-status hint" id="composerStatus"></span>
-              <button type="submit" class="primary-btn" id="postBtn">Post</button>
-            </div>
-          </div>
-        </form>
-        <p class="hint" id="postsNote" hidden>Join the league (or log in with your PIN) to post.</p>
-        <div class="posts" id="posts"><p class="feed-empty">Loading posts…</p></div>
-      </div>
-      <div class="chat" id="chatPane" hidden>
-        <div class="chat-list" id="chatList"><p class="feed-empty">No messages yet. Say hi 👋</p></div>
-        <form class="chat-form" id="chatForm" novalidate>
-          <input type="text" id="chatInput" maxlength="300" placeholder="Message the league…" autocomplete="off" aria-label="Chat message">
-          <button type="submit" class="primary-btn chat-send" aria-label="Send">➤</button>
-        </form>
-        <p class="hint" id="chatNote" hidden>Join the league (or log in with your PIN) to chat.</p>
+    </div>
+  </section>
+
+  <section class="card card-anim feed-card live-wide" id="liveCard">
+    <div class="card-head">
+      <h2><span class="h-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-8 4 16 3-8h4"/></svg></span>Live <span class="live-dot" aria-hidden="true"></span></h2>
+      <div class="seg feed-tabs" id="feedTabs" role="tablist" aria-label="Activity, posts or chat">
+        <button type="button" data-tab="feed" class="active">Activity</button>
+        <button type="button" data-tab="posts">Posts<span class="badge-count" id="postsUnread" hidden></span></button>
+        <button type="button" data-tab="chat">Chat<span class="badge-count" id="chatUnread" hidden></span></button>
       </div>
     </div>
+    <div class="feed" id="feed"><p class="feed-empty">Loading activity…</p></div>
+    <div class="posts-pane" id="postsPane" hidden>
+      <form class="composer" id="composer" novalidate hidden>
+        <span class="avatar sm" id="composerAv"></span>
+        <div class="composer-main">
+          <textarea id="postText" maxlength="1000" rows="2" placeholder="Share a meme, a pic of your study setup, a flex…"></textarea>
+          <div class="attach-preview" id="attachPreview" hidden></div>
+          <div class="composer-bar">
+            <label class="tool-btn upload-btn" title="Add a photo">📷 Photo<input type="file" id="postPhoto" accept="image/*" class="file-input"></label>
+            <button type="button" class="tool-btn" id="postGifBtn" title="Add a GIF"><b>GIF</b></button>
+            <span class="composer-status hint" id="composerStatus"></span>
+            <button type="submit" class="primary-btn" id="postBtn">Post</button>
+          </div>
+        </div>
+      </form>
+      <p class="hint" id="postsNote" hidden>Join the league (or log in with your PIN) to post.</p>
+      <div class="posts" id="posts"><p class="feed-empty">Loading posts…</p></div>
+    </div>
+    <div class="chat" id="chatPane" hidden>
+      <div class="chat-list" id="chatList"><p class="feed-empty">No messages yet. Say hi 👋</p></div>
+      <form class="chat-form" id="chatForm" novalidate>
+        <input type="text" id="chatInput" maxlength="300" placeholder="Message the league…" autocomplete="off" aria-label="Chat message">
+        <button type="submit" class="primary-btn chat-send" aria-label="Send">➤</button>
+      </form>
+      <p class="hint" id="chatNote" hidden>Join the league (or log in with your PIN) to chat.</p>
     </div>
   </section>
 
@@ -1603,7 +1619,7 @@ if (typeof HTMLDialogElement !== 'function' || !HTMLDialogElement.prototype.show
 }
 
 const FB = { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, collection, doc, onSnapshot, getDoc, getDocs, setDoc, updateDoc, deleteDoc, writeBatch, query, orderBy, limit };
-const APP_VERSION = '2.2 (tabs)';   // shown at the bottom of the page; bump on each update
+const APP_VERSION = '2.3 (big live)';   // shown at the bottom of the page; bump on each update
 const ONLINE_WINDOW_MS = 150000;   // seen in the last 2.5 minutes = online
 const HEARTBEAT_MS = 60000;
 
