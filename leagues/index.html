@@ -1023,6 +1023,9 @@ input[type=number]:focus, input[type=text]:focus, select:focus { outline: none; 
 /* ===== Leagues: landing page + admin ===== */
 body.no-league .app > :not(.top):not(#landing):not(.version):not(#notice) { display: none !important; }
 body.no-league .top-stats { display: none; }
+.switch-league { display: inline-flex; align-items: center; gap: 4px; margin-top: 6px; padding: 4px 10px; border-radius: 999px; font-size: .74rem; font-weight: 700; color: var(--lime); border: 1px solid rgba(200, 255, 61, .35); background: rgba(200, 255, 61, .08); text-decoration: none; transition: background .2s, border-color .2s; }
+.switch-league:hover { background: rgba(200, 255, 61, .16); border-color: rgba(200, 255, 61, .6); }
+.switch-league[hidden] { display: none; }
 .league-tag { display: inline-block; font-weight: 700; color: var(--lime); margin-right: 8px; }
 .league-tag::after { content: "·"; color: var(--muted); margin-left: 8px; font-weight: 400; }
 .landing { display: flex; flex-direction: column; gap: 16px; }
@@ -1138,6 +1141,7 @@ body.no-league .top-stats { display: none; }
       <div>
         <h1>STUDY LEAGUE</h1>
         <p class="sub"><span class="league-tag" id="leagueName" hidden></span><span id="todayLabel"></span></p>
+        <a class="switch-league" id="switchLeague" href="./" hidden>⇄ Switch league</a>
       </div>
     </div>
     <div class="top-stats">
@@ -1598,7 +1602,7 @@ if (typeof HTMLDialogElement !== 'function' || !HTMLDialogElement.prototype.show
 }
 
 const FB = { initializeApp, getAuth, signInAnonymously, onAuthStateChanged, getFirestore, collection, doc, onSnapshot, getDoc, getDocs, setDoc, updateDoc, deleteDoc, writeBatch, query, orderBy, limit, where };
-const APP_VERSION = '1.0 (leagues)';   // shown at the bottom of the page; bump on each update
+const APP_VERSION = '1.1 (switch league)';   // shown at the bottom of the page; bump on each update
 const ONLINE_WINDOW_MS = 150000;   // seen in the last 2.5 minutes = online
 const HEARTBEAT_MS = 60000;
 
@@ -3601,6 +3605,7 @@ const HEARTBEAT_MS = 60000;
       if (!cardsBuilt) { MAX_PLAYERS = size; SLOTS = Array.from({ length: size }, (_, i) => i + 1); buildCards(); }
       $('#leagueName').textContent = S.league.name;
       $('#leagueName').hidden = false;
+      $('#switchLeague').hidden = false;
       document.title = `${S.league.name} · Study League`;
       rememberLeague(LID, S.league.name);
       if (!listening) { listening = true; listen(); }
