@@ -1,0 +1,170 @@
+rules_version = '2';
+
+// Study League (multi-league) security rules.
+// Paste this whole file into Firebase console → Firestore Database → Rules → Publish.
+//
+// Every browser signs in anonymously. Anyone can create a league; whoever creates it gets
+// spot s1 and is the league admin. Each league has its own join code, players and data:
+//   leagues/{lid}                          { name, size, owner: "s1", createdAt }
+//   leagues/{lid}/private/join             { code }   join code (only the admin can read/change it)
+//   leagues/{lid}/secrets/{pid}            { pin, code }   never readable
+//   leagues/{lid}/profiles/{pid}           + devices / sessions / achievements / reactions
+//   leagues/{lid}/photos/{pid}, banners/{pid}, chat/{id}
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function L(lid) { return /databases/$(database)/documents/leagues/$(lid); }
+
+    // A browser is linked to a spot only if its stored PIN matches the spot's current PIN.
+    function linked(lid, pid) {
+      return signedIn()
+        && exists(/databases/$(database)/documents/leagues/$(lid)/profiles/$(pid)/devices/$(request.auth.uid))
+        && get(/databases/$(database)/documents/leagues/$(lid)/profiles/$(pid)/devices/$(request.auth.uid)).data.pin
+           == get(/databases/$(database)/documents/leagues/$(lid)/secrets/$(pid)).data.pin;
+    }
+    function isAdmin(lid) { return linked(lid, get(L(lid)).data.owner); }
+
+    // s1 … s<size>, where size is the league's player limit (2–10).
+    function validSlot(lid, pid) {
+      return pid.matches('^s([1-9]|10)$') && int(pid[1:]) <= getAfter(L(lid)).data.size;
+    }
+    function validCode(c) { return c is string && c.matches('^[A-Z0-9]{4,16}$'); }
+
+    function validProfile(pid, d) {
+      return d.slot is int && ('s' + string(d.slot)) == pid
+        && d.name is string && d.name.size() >= 1 && d.name.size() <= 20
+        && d.avatar is string && d.avatar.size() <= 16
+        && (!('banner' in d) || d.banner == null || (d.banner is string && d.banner.size() <= 16));
+    }
+
+    function validSession(d) {
+      return d.date is string && d.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && d.hours is number && d.hours > 0 && d.hours <= 24
+        && (!('subject' in d) || (d.subject is string && d.subject.size() <= 40));
+    }
+
+    function validReaction(d) {
+      return d.emoji in ['🔥', '👏', '💀'] && d.target is string && d.sid is string;
+    }
+
+    function validImage(d, max) {
+      return d.data is string && d.data.size() < max
+        && d.data.matches('data:image/(jpeg|png|webp);base64,.+');
+    }
+
+    match /leagues/{lid} {
+      // You can open a league only by its exact id (from the invite link); nobody can list all leagues.
+      allow get: if signedIn();
+      allow list: if false;
+      // Create a league: in the same batch as its join code and the creator's spot s1.
+      allow create: if signedIn() && lid.matches('^[a-z0-9-]{3,40}$')
+        && request.resource.data.keys().hasOnly(['name', 'size', 'owner', 'createdAt'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 40
+        && request.resource.data.size is int && request.resource.data.size >= 2 && request.resource.data.size <= 10
+        && request.resource.data.owner == 's1'
+        && request.resource.data.createdAt is int
+        && existsAfter(/databases/$(database)/documents/leagues/$(lid)/private/join)
+        && existsAfter(/databases/$(database)/documents/leagues/$(lid)/profiles/s1);
+      // The admin can rename the league (nothing else).
+      allow update: if isAdmin(lid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['name'])
+        && request.resource.data.name is string
+        && request.resource.data.name.size() >= 1 && request.resource.data.name.size() <= 40;
+      // The admin can delete the whole league.
+      allow delete: if isAdmin(lid);
+
+      // Join code: set when the league is created; only the admin can see or change it.
+      match /private/{doc} {
+        allow read: if doc == 'join' && isAdmin(lid);
+        allow create: if signedIn() && doc == 'join' && !exists(L(lid)) && existsAfter(L(lid))
+          && request.resource.data.keys().hasOnly(['code']) && validCode(request.resource.data.code);
+        allow update: if doc == 'join' && isAdmin(lid)
+          && request.resource.data.keys().hasOnly(['code']) && validCode(request.resource.data.code);
+        allow delete: if isAdmin(lid);
+      }
+
+      // PIN for each spot. Claiming a free spot needs the league's join code; never readable.
+      // The admin can reset a player's PIN.
+      match /secrets/{pid} {
+        allow read: if false;
+        allow create, update: if signedIn() && validSlot(lid, pid)
+          && !exists(/databases/$(database)/documents/leagues/$(lid)/profiles/$(pid))
+          && request.resource.data.pin is string && request.resource.data.pin.matches('^[0-9]{4}$')
+          && request.resource.data.code is string
+          && request.resource.data.code == getAfter(/databases/$(database)/documents/leagues/$(lid)/private/join).data.code;
+        allow update: if isAdmin(lid)
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['pin'])
+          && request.resource.data.pin is string && request.resource.data.pin.matches('^[0-9]{4}$');
+        allow delete: if isAdmin(lid);
+      }
+
+      match /profiles/{pid} {
+        allow read: if signedIn();
+        // Claim a free spot: must link this browser in the same batch.
+        allow create: if signedIn() && validSlot(lid, pid) && validProfile(pid, request.resource.data)
+          && existsAfter(/databases/$(database)/documents/leagues/$(lid)/profiles/$(pid)/devices/$(request.auth.uid));
+        allow update: if linked(lid, pid) && validProfile(pid, request.resource.data);
+        // The admin can kick other players; their own spot only goes when the whole league is deleted.
+        allow delete: if isAdmin(lid) && (pid != get(L(lid)).data.owner || !existsAfter(L(lid)));
+
+        // Browsers allowed to edit this profile. Linking requires the correct PIN.
+        match /devices/{uid} {
+          allow read: if signedIn() && (request.auth.uid == uid || isAdmin(lid));
+          allow create, update: if signedIn() && request.auth.uid == uid
+            && request.resource.data.pin is string
+            && request.resource.data.pin == getAfter(/databases/$(database)/documents/leagues/$(lid)/secrets/$(pid)).data.pin;
+          allow delete: if signedIn() && (request.auth.uid == uid || isAdmin(lid));
+        }
+
+        match /sessions/{sessionId} {
+          allow read: if signedIn();
+          allow create, update: if linked(lid, pid) && validSession(request.resource.data);
+          allow delete: if linked(lid, pid) || isAdmin(lid);
+        }
+
+        match /achievements/{aid} {
+          allow read: if signedIn();
+          allow create, update: if linked(lid, pid) && aid.size() <= 24 && request.resource.data.at is int;
+          allow delete: if isAdmin(lid);
+        }
+
+        match /reactions/{reactionId} {
+          allow read: if signedIn();
+          allow create, update: if linked(lid, pid) && validReaction(request.resource.data);
+          allow delete: if linked(lid, pid) || isAdmin(lid);
+        }
+      }
+
+      match /photos/{pid} {
+        allow read: if signedIn();
+        allow create, update: if validSlot(lid, pid) && linked(lid, pid) && validImage(request.resource.data, 200000);
+        allow delete: if linked(lid, pid) || isAdmin(lid);
+      }
+
+      match /banners/{pid} {
+        allow read: if signedIn();
+        allow create, update: if validSlot(lid, pid) && linked(lid, pid) && validImage(request.resource.data, 400000);
+        allow delete: if linked(lid, pid) || isAdmin(lid);
+      }
+
+      // Chat: post only as yourself; delete your own (the admin can delete any).
+      match /chat/{msgId} {
+        allow read: if signedIn();
+        allow create: if request.resource.data.pid is string && validSlot(lid, request.resource.data.pid)
+          && linked(lid, request.resource.data.pid)
+          && request.resource.data.text is string
+          && request.resource.data.text.size() >= 1 && request.resource.data.text.size() <= 300
+          && request.resource.data.at is int;
+        allow update: if false;
+        allow delete: if (resource.data.pid is string && linked(lid, resource.data.pid)) || isAdmin(lid);
+      }
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
